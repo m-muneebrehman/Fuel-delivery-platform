@@ -1,21 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Auth from "./pages/auth/auth";
+import { useAppStore } from "./store";
+import Home from "./pages/home/home";
 
-function App() {
-  const [count, setCount] = useState(0)
+const PrivateRoute = ({ children }) => {
+  const { userInfo } = useAppStore();
+  const isAuthenticated = !!userInfo;
+  return isAuthenticated ? children : <Navigate to="/auth" />;
+};
 
+const App = () => {
   return (
-    <>
-      <button 
-        className="bg-blue-400 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow"
-        onClick={() => setCount(count + 1)}
-      >
-        Count is {count}
-      </button>
-    </>
-  )
-}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="*" element={<Navigate to="/auth" />} />
+        <Route path="/auth" element={<Auth />}></Route>
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;
