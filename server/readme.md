@@ -7,7 +7,7 @@ This documentation provides details about the API endpoints available in the Fue
 ### Register User
 Creates a new user account.
 
-**Endpoint:** `POST /api/user/register`
+**Endpoint:** `POST /users/register`
 
 **Request Body:**
 ```json
@@ -48,7 +48,7 @@ Creates a new user account.
 ### Login User
 Authenticates a user and returns a token.
 
-**Endpoint:** `POST /api/user/login`
+**Endpoint:** `POST /users/login`
 
 **Request Body:**
 ```json
@@ -85,7 +85,7 @@ Authenticates a user and returns a token.
 ### Get User Profile
 Retrieves the profile of the authenticated user.
 
-**Endpoint:** `GET /api/user/profile`
+**Endpoint:** `GET /users/profile`
 
 **Headers:**
 - `Authorization`: Bearer jwt_token_string
@@ -109,7 +109,7 @@ Retrieves the profile of the authenticated user.
 ### Logout User
 Invalidates the current user's token.
 
-**Endpoint:** `GET /api/user/logout`
+**Endpoint:** `GET /users/logout`
 
 **Headers:**
 - `Authorization`: Bearer jwt_token_string
@@ -127,7 +127,7 @@ Invalidates the current user's token.
 
 ## Authentication
 
-All endpoints except for `/register` and `/login` require authentication. To authenticate requests, include the JWT token in the Authorization header:
+All endpoints except for `/users/register` and `/users/login` require authentication. To authenticate requests, include the JWT token in the Authorization header:
 
 ```
 Authorization: Bearer <jwt_token>
