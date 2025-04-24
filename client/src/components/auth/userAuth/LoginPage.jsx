@@ -5,7 +5,7 @@ const LoginPage = () => {
   const route = useNavigate();
 
   const handleLogin = () => {
-    route("/petrol-owner/dashboard"); // Replace with your desired route
+    route("/user/dashboard"); // Replace with your desired route
   };
 
   return (

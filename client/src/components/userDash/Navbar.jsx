@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { Logo } from "./Logo";
+import { Logo } from "../Home/logo";
 
 export const Navbar = () => {
   const navigationItems = [
-    { title: "Services", href: "/services" },
-    { title: "About Us", href: "/about" },
-    { title: "Contact Us", href: "/contact" },
+    { title: "Orders", href: "/petrol-owner/dashboard" },
+    { title: "Products", href: "/petrol-owner/dashboard" },
+    { title: "Settings", href: "/petrol-owner/settings" },
   ];
 
   const [isOpen, setOpen] = useState(false);
@@ -70,17 +70,11 @@ export const Navbar = () => {
               <Link
                 key={item.title}
                 to={item.href}
-                className="text-white text-md px-3 py-2 rounded-md hover:outline hover:outline-2 hover:outline-red-500 transition duration-200"
-              >
+                className="bg-red-100 text-red-700 text-md px-3 py-2 rounded-md hover:outline-2 hover:outline-red-500 hover:bg-red-200 transition duration-200"
+                >
                 {item.title}
               </Link>
             ))}
-            <Link
-              to="/auth"
-              className="text-white font-medium ml-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition duration-200"
-            >
-              Sign in
-            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -111,12 +105,6 @@ export const Navbar = () => {
                 {item.title}
               </Link>
             ))}
-            <Link
-              to="/signin"
-              className="block text-white font-medium px-4 py-2 mt-4 bg-red-600 hover:bg-red-700 text-center rounded-md transition duration-200"
-            >
-              Sign in
-            </Link>
           </div>
         )}
       </div>

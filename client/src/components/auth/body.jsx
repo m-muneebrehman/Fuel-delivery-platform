@@ -49,7 +49,7 @@ const AuthBody = () => {
           </p>
 
           <Link
-            to="/auth/petrol-owner"
+            to="/auth/user"
             className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3 rounded text-lg font-medium mb-12 inline-block text-center"
           >
             Login
