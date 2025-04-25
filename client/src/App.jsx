@@ -3,11 +3,16 @@ import Auth from "./pages/auth/auth";
 import { useAppStore } from "./store";
 import Home from "./pages/home/home";
 import PoAuth from "./pages/auth/petrol-owner/po-auth";
-import ThemeContextProvider from '@/context/ThemeContextProvider';
+import ThemeContextProvider from "@/context/ThemeContextProvider";
 import OwnerDashboard from "./pages/owner/dashboard";
 import DeliveryBoyManagement from "./pages/owner/settings";
 import UserAuth from "./pages/auth/user/user-auth";
 import UserDashboard from "./pages/user/dashboard";
+import OrdersPage from "./components/userDash/orders";
+import FuelDeliverySystem from "./components/userDash/fuel-deliver";
+import UserProfile from "./components/userDash/profile";
+import AdminHome from "./pages/admin/home";
+import Notifications from "./pages/admin/notifications";
 
 const PrivateRoute = ({ children }) => {
   const { userInfo } = useAppStore();
@@ -18,17 +23,31 @@ const PrivateRoute = ({ children }) => {
 const App = () => {
   return (
     <ThemeContextProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/auth" element={<Auth />}></Route>
-        <Route path="/auth/petrol-owner" element={<PoAuth />}></Route>
-        <Route path="/petrol-owner/dashboard" element={<OwnerDashboard />}></Route>
-        <Route path="/petrol-owner/settings" element={<DeliveryBoyManagement />}></Route>
-        <Route path="/auth/user" element={<UserAuth />}></Route>
-        <Route path="/user/dashboard" element={<UserDashboard />}></Route>
-      </Routes>
-    </BrowserRouter>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<Auth />}></Route>
+          <Route path="/auth/petrol-owner" element={<PoAuth />}></Route>
+          <Route
+            path="/petrol-owner/dashboard"
+            element={<OwnerDashboard />}
+          ></Route>
+          <Route
+            path="/petrol-owner/settings"
+            element={<DeliveryBoyManagement />}
+          ></Route>
+          <Route path="/auth/user" element={<UserAuth />}></Route>
+          <Route path="/user/*" element={<UserDashboard />}>
+            <Route path="dashboard" element={<UserDashboard />} />
+            <Route path="store" element={<UserDashboard />} />
+          </Route>
+          <Route path="/user/orders" element={<OrdersPage />}></Route>
+          <Route path="/user/fuel" element={<FuelDeliverySystem />}></Route>
+          <Route path="/user/profile" element={<UserProfile />}></Route>
+          <Route path="/admin" element={<AdminHome />}></Route>
+          <Route path="/admin/notifications" element={<Notifications />}></Route>
+        </Routes>
+      </BrowserRouter>
     </ThemeContextProvider>
   );
 };

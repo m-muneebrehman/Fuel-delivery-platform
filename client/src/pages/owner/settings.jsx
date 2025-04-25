@@ -251,7 +251,7 @@ export default function DeliveryBoyManagement() {
               {/* Search Bar */}
               <div className="relative w-full sm:w-auto">
                 {/* Search icon (hidden on small screens) */}
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none hidden sm:flex">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none sm:flex">
                   <Search className="h-4 w-4 text-gray-400" />
                 </div>
 
@@ -529,39 +529,6 @@ export default function DeliveryBoyManagement() {
                   {errors.photo && (
                     <p className="mt-1 text-sm text-red-600">{errors.photo}</p>
                   )}
-                </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Initial Status
-                  </label>
-                  <div className="mt-2 space-x-4">
-                    <label className="inline-flex items-center">
-                      <Input
-                        type="radio"
-                        name="status"
-                        value="available"
-                        checked={formData.status === "available"}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Available
-                      </span>
-                    </label>
-                    <label className="inline-flex items-center">
-                      <Input
-                        type="radio"
-                        name="status"
-                        value="busy"
-                        checked={formData.status === "busy"}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Busy</span>
-                    </label>
-                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6">

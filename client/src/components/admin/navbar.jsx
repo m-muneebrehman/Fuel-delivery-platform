@@ -7,10 +7,9 @@ import { Logo } from "../Home/logo";
 
 export const Navbar = () => {
   const navigationItems = [
-    { title: "Store", href: "/user/store" },
-    { title: "Fuel Delievery", href: "/user/fuel" },
-    { title: "My Orders", href: "/user/orders" },
-    { title: "My Profile", href: "/user/profile" },
+    { title: "Home", href: "/admin" },
+    { title: "Store", href: "/admin/store" },
+    { title: "Notifications", href: "/admin/notifications" },
   ];
 
   const [isOpen, setOpen] = useState(false);
@@ -71,8 +70,8 @@ export const Navbar = () => {
               <Link
                 key={item.title}
                 to={item.href}
-                className="bg-red-100 text-red-700 text-md px-3 py-2 rounded-md hover:outline-2 hover:outline-red-500 hover:bg-red-200 transition duration-200"
-                >
+                className="text-white text-md px-3 py-2 rounded-md hover:outline-2 hover:outline-red-500 transition duration-200"
+              >
                 {item.title}
               </Link>
             ))}
