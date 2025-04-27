@@ -1,0 +1,70 @@
+const fuelPumpService = require("../services/fuelPump.service");
+const { validationResult ,cookie} = require("express-validator");
+const fuelPumpModel = require("../models/fuelPump.model");
+const blacklistTokenModel = require("../models/blacklistToken.model");
+
+module.exports.registerFuelPump = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name, email, password, location } = req.body;
+
+    const isFuelPumpExist = await fuelPumpModel.findOne({ email });
+    if(isFuelPumpExist) {
+        return res.status(400).json({ message: "Fuel pump already exists" });
+    }
+
+    const hashedPassword = await fuelPumpModel.hashPassword(password);
+
+    const fuelPump = await fuelPumpService.createFuelPump({ name, email, password: hashedPassword, location });
+
+    const token = fuelPump.generateAuthToken();
+
+    res.status(201).json({ token,fuelPump });
+}
+
+
+module.exports.loginFuelPump = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    const fuelPump = await fuelPumpModel.findOne({ email }).select("+password");
+
+    if(!fuelPump) {
+        return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const isMatch = await fuelPump.comparePassword(password);
+
+    if(!isMatch) {
+        return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const token = fuelPump.generateAuthToken();
+    res.cookie("token", token);
+
+    res.status(200).json({ token, fuelPump });
+    
+    
+}
+
+
+module.exports.getFuelPumpProfile = async (req, res, next) => {
+    res.status(200).json(req.fuelPump);
+}
+
+module.exports.logoutFuelPump = async (req, res, next) => {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+
+    await blacklistTokenModel.create({ token });
+    
+    res.clearCookie("token");
+    res.status(200).json({ message: "Logged out successfully" });
+}
+

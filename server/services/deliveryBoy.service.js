@@ -26,7 +26,7 @@ module.exports.createDeliveryBoy = async({
     })
 
     return deliveryBoy;
-}
+};
 
 
 module.exports.verifyDeliveryBoy = async({deliveryBoyId})=>{
@@ -39,7 +39,7 @@ module.exports.verifyDeliveryBoy = async({deliveryBoyId})=>{
     await deliveryBoy.save();
 
     return deliveryBoy;
-}
+};
 
 
 

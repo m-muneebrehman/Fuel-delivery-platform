@@ -13,18 +13,18 @@ module.exports.createFuelPump = async({
     })
 
     return fuelPump;
-}
+};
 
-module.exports.verifyFuelPump = async({fuelPumpId})=>{
-    const fuelPump = await FuelPumpModel.findById(fuelPumpId);
-    if(!fuelPump){
-        throw new Error("Fuel pump not found");
-    }
+// module.exports.verifyFuelPump = async({fuelPumpId})=>{
+//     const fuelPump = await FuelPumpModel.findById(fuelPumpId);
+//     if(!fuelPump){
+//         throw new Error("Fuel pump not found");
+//     }
     
-    fuelPump.isVerified = true;
-    await fuelPump.save();
+//     fuelPump.isVerified = true;
+//     await fuelPump.save();
 
-    return fuelPump;
-}
+//     return fuelPump;
+// };
 
 

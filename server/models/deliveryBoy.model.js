@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
 
 const deliveryBoySchema = new mongoose.Schema(
   {
@@ -46,13 +47,17 @@ const deliveryBoySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["available", "unavailable"],
-      default: "available",
+      enum: ["available", "busy"],
+      default: "busy",
     },
     isVerified: {
       type: Boolean,
       default: false,
     },
+    location:{
+      type:String,
+      default:""
+    }
   },
   { timestamps: true }
 );
