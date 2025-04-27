@@ -40,6 +40,10 @@ const fuelPumpSchema = new mongoose.Schema(
         default: 0,
       },
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
