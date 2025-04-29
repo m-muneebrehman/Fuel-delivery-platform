@@ -8,6 +8,7 @@ const connectToDb = require('./db/db');
 const userRoutes = require('./routes/user.routes');
 const fuelPumpRoutes = require('./routes/fuelPump.routes'); 
 const deliveryBoyRoutes = require('./routes/deliveryBoy.routes');
+const inventoryRoutes = require('./routes/inventory.routes')
 
 
 app.use(cors());
@@ -25,5 +26,6 @@ app.get('/',(req,res)=>{
 app.use('/users',userRoutes);
 app.use('/fuelpumps',fuelPumpRoutes);
 app.use('/deliveryBoys',deliveryBoyRoutes);
+app.use('/inventory',inventoryRoutes);
 
 module.exports = app;

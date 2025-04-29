@@ -491,3 +491,345 @@ All endpoints may return the following error responses:
 - File uploads should be handled through multipart/form-data
 - Rate limiting may be applied to prevent abuse
 - Tokens expire after 24 hours
+
+
+
+# Inventory API Documentation
+
+## Overview
+This document provides detailed information about the Inventory API endpoints, including request/response formats, authentication requirements, and example usage.
+
+## Base URL
+```
+http://localhost:3000/inventory
+```
+
+## Authentication
+Protected routes require a valid JWT token in the Authorization header:
+```
+Authorization: Bearer your_jwt_token_here
+```
+
+## API Endpoints
+
+### 1. Create Inventory Item
+- **URL**: `/inventory`
+- **Method**: `POST`
+- **Auth Required**: Yes (Admin)
+- **Request Body**:
+```json
+{
+    "name": "Bosch Brake Pad Set",
+    "description": "High-performance brake pads for front wheels",
+    "category": "Brake System",
+    "price": 89.99,
+    "quantity": 50,
+    "manufacturer": "Bosch",
+    "compatibleVehicles": [
+        {
+            "make": "Toyota",
+            "model": "Camry",
+            "year": 2020
+        }
+    ],
+    "images": [
+        "https://example.com/brakepad1.jpg"
+    ],
+    "specifications": {
+        "material": "Ceramic",
+        "thickness": "12mm"
+    },
+    "sku": "BRK-BOS-FRONT-2023",
+    "warranty": {
+        "duration": 24,
+        "description": "2-year manufacturer warranty"
+    }
+}
+```
+- **Response**: `201 Created`
+```json
+{
+    "success": true,
+    "data": {
+        // Created inventory item
+    }
+}
+```
+
+### 2. Get All Inventory Items
+- **URL**: `/inventory`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Query Parameters**:
+  - `page` (default: 1)
+  - `limit` (default: 10)
+  - `sortBy` (default: "name")
+  - `sortOrder` (default: "asc")
+  - `category` (optional)
+  - `manufacturer` (optional)
+  - `minPrice` (optional)
+  - `maxPrice` (optional)
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": [
+        // Array of inventory items
+    ],
+    "pagination": {
+        "total": 100,
+        "page": 1,
+        "limit": 10,
+        "pages": 10
+    }
+}
+```
+
+### 3. Get Item by ID
+- **URL**: `/inventory/:id`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": {
+        // Single inventory item
+    }
+}
+```
+
+### 4. Get Item by SKU
+- **URL**: `/inventory/sku/:sku`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": {
+        // Single inventory item
+    }
+}
+```
+
+### 5. Update Inventory Item
+- **URL**: `/inventory/:id`
+- **Method**: `PUT`
+- **Auth Required**: Yes (Admin)
+- **Request Body**:
+```json
+{
+    "name": "Updated Name",
+    "price": 99.99,
+    "description": "Updated description"
+}
+```
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": {
+        // Updated inventory item
+    }
+}
+```
+
+### 6. Update Inventory Quantity
+- **URL**: `/inventory/:id/quantity`
+- **Method**: `PATCH`
+- **Auth Required**: Yes (Admin)
+- **Request Body**:
+```json
+{
+    "quantityChange": 10
+}
+```
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": {
+        // Updated inventory item
+    }
+}
+```
+
+### 7. Delete Inventory Item
+- **URL**: `/inventory/:id`
+- **Method**: `DELETE`
+- **Auth Required**: Yes (Admin)
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "message": "Inventory item deleted successfully"
+}
+```
+
+### 8. Get Items by Category
+- **URL**: `/inventory/category/:category`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Query Parameters**:
+  - `page` (default: 1)
+  - `limit` (default: 10)
+  - `sortBy` (default: "name")
+  - `sortOrder` (default: "asc")
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": [
+        // Array of inventory items
+    ],
+    "pagination": {
+        "total": 100,
+        "page": 1,
+        "limit": 10,
+        "pages": 10
+    }
+}
+```
+
+### 9. Get Items by Manufacturer
+- **URL**: `/inventory/manufacturer/:manufacturer`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Query Parameters**:
+  - `page` (default: 1)
+  - `limit` (default: 10)
+  - `sortBy` (default: "name")
+  - `sortOrder` (default: "asc")
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": [
+        // Array of inventory items
+    ],
+    "pagination": {
+        "total": 100,
+        "page": 1,
+        "limit": 10,
+        "pages": 10
+    }
+}
+```
+
+### 10. Search by Compatible Vehicle
+- **URL**: `/inventory/vehicle/search`
+- **Method**: `GET`
+- **Auth Required**: No
+- **Query Parameters**:
+  - `make` (required)
+  - `model` (required)
+  - `year` (required)
+  - `page` (default: 1)
+  - `limit` (default: 10)
+  - `sortBy` (default: "name")
+  - `sortOrder` (default: "asc")
+- **Response**: `200 OK`
+```json
+{
+    "success": true,
+    "data": [
+        // Array of compatible inventory items
+    ],
+    "pagination": {
+        "total": 100,
+        "page": 1,
+        "limit": 10,
+        "pages": 10
+    }
+}
+```
+
+## Error Responses
+All endpoints may return the following error responses:
+
+### 400 Bad Request
+```json
+{
+    "success": false,
+    "message": "Validation error message",
+    "error": {
+        // Detailed validation errors
+    }
+}
+```
+
+### 401 Unauthorized
+```json
+{
+    "success": false,
+    "message": "Unauthorized access"
+}
+```
+
+### 403 Forbidden
+```json
+{
+    "success": false,
+    "message": "Access forbidden"
+}
+```
+
+### 404 Not Found
+```json
+{
+    "success": false,
+    "message": "Resource not found"
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+    "success": false,
+    "message": "Internal server error"
+}
+```
+
+## Data Models
+
+### Inventory Item
+```json
+{
+    "name": "String",
+    "description": "String",
+    "category": "String",
+    "price": "Number",
+    "quantity": "Number",
+    "manufacturer": "String",
+    "compatibleVehicles": [
+        {
+            "make": "String",
+            "model": "String",
+            "year": "Number"
+        }
+    ],
+    "images": ["String"],
+    "specifications": {
+        "type": "Map",
+        "of": "String"
+    },
+    "sku": "String",
+    "isActive": "Boolean",
+    "warranty": {
+        "duration": "Number",
+        "description": "String"
+    }
+}
+```
+
+## Categories
+Available categories for inventory items:
+- Engine Parts
+- Brake System
+- Transmission
+- Electrical
+- Suspension
+- Body Parts
+- Filters
+- Other
