@@ -39,6 +39,46 @@ const inventorySchema = new mongoose.Schema({
   }
 });
 
+const orderSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  items: [{
+    itemId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'InventoryItem',
+      required: true
+    },
+    name: String,
+    quantity: Number,
+    price: Number
+  }],
+  totalAmount: Number,
+  deliveryAddress: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    coordinates: {
+      lat: Number,
+      lng: Number
+    }
+  },
+  status: String,
+  paymentStatus: String,
+  paymentMethod: String,
+  deliveryDate: Date,
+  deliveryTimeSlot: {
+    start: String,
+    end: String
+  },
+  notes: String,
+  createdAt: Date,
+  updatedAt: Date
+});
+
 const fuelDeliverySchema = new mongoose.Schema({
   userId: mongoose.Schema.Types.ObjectId,
   fuelType: String,
@@ -69,6 +109,7 @@ const fuelPumpSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 const InventoryItem = mongoose.model('InventoryItem', inventorySchema);
+const Order = mongoose.model('Order', orderSchema);
 const FuelDelivery = mongoose.model('FuelDelivery', fuelDeliverySchema);
 const FuelPump = mongoose.model('FuelPump', fuelPumpSchema);
 
@@ -205,6 +246,82 @@ const inventoryItems = [
   }
 ];
 
+// Sample Orders
+const orders = [
+  {
+    user: "user_id_will_be_replaced", // Will be replaced with actual user ID
+    items: [
+      {
+        itemId: "inventory_id_will_be_replaced", // Will be replaced with actual inventory ID
+        name: "Brake Pads",
+        quantity: 2,
+        price: 89.99
+      },
+      {
+        itemId: "inventory_id_will_be_replaced", // Will be replaced with actual inventory ID
+        name: "Oil Filter",
+        quantity: 1,
+        price: 12.99
+      }
+    ],
+    totalAmount: 192.97,
+    deliveryAddress: {
+      street: "123 Main St",
+      city: "City",
+      state: "State",
+      zipCode: "12345",
+      coordinates: {
+        lat: 40.7128,
+        lng: -74.0060
+      }
+    },
+    status: "pending",
+    paymentStatus: "pending",
+    paymentMethod: "credit-card",
+    deliveryDate: new Date("2024-03-01"),
+    deliveryTimeSlot: {
+      start: "09:00",
+      end: "12:00"
+    },
+    notes: "Please deliver in the morning",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    user: "user_id_will_be_replaced", // Will be replaced with actual user ID
+    items: [
+      {
+        itemId: "inventory_id_will_be_replaced", // Will be replaced with actual inventory ID
+        name: "Spark Plugs Set",
+        quantity: 1,
+        price: 45.99
+      }
+    ],
+    totalAmount: 45.99,
+    deliveryAddress: {
+      street: "456 Oak Ave",
+      city: "City",
+      state: "State",
+      zipCode: "12345",
+      coordinates: {
+        lat: 40.7129,
+        lng: -74.0061
+      }
+    },
+    status: "confirmed",
+    paymentStatus: "paid",
+    paymentMethod: "debit-card",
+    deliveryDate: new Date("2024-03-02"),
+    deliveryTimeSlot: {
+      start: "14:00",
+      end: "17:00"
+    },
+    notes: "Afternoon delivery preferred",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+];
+
 // Sample Fuel Delivery Requests
 const fuelDeliveries = [
   {
@@ -321,11 +438,40 @@ const fuelPumps = [
 async function seedDatabase() {
   try {
     // Clear existing data
-    await mongoose.connection.dropDatabase();
+    await User.deleteMany({});
+    await InventoryItem.deleteMany({});
+    await Order.deleteMany({});
+    await FuelDelivery.deleteMany({});
+    await FuelPump.deleteMany({});
     
     // Insert Users
     const createdUsers = await User.insertMany(users);
     console.log('Users seeded successfully');
+
+    // Insert Inventory Items
+    const createdInventoryItems = await InventoryItem.insertMany(inventoryItems);
+    console.log('Inventory items seeded successfully');
+
+    // Update and insert orders with actual IDs
+    const updatedOrders = orders.map(order => {
+      // Replace user ID placeholder with actual user ID
+      const user = createdUsers[0]; // Using first user for all orders
+      order.user = user._id;
+
+      // Replace inventory ID placeholders with actual inventory IDs
+      order.items = order.items.map(item => {
+        const inventoryItem = createdInventoryItems.find(inv => inv.name === item.name);
+        if (inventoryItem) {
+          item.itemId = inventoryItem._id;
+        }
+        return item;
+      });
+
+      return order;
+    });
+
+    await Order.insertMany(updatedOrders);
+    console.log('Orders seeded successfully');
 
     // Update fuel delivery user IDs with created user IDs
     fuelDeliveries.forEach((delivery, index) => {
@@ -333,7 +479,6 @@ async function seedDatabase() {
     });
 
     // Insert other data
-    await InventoryItem.insertMany(inventoryItems);
     await FuelDelivery.insertMany(fuelDeliveries);
     await FuelPump.insertMany(fuelPumps);
 

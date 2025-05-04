@@ -22,10 +22,21 @@ const fuelPumpSchema = new mongoose.Schema(
       select: false,
     },
     location: {
+      type: {
         type: String,
-        required: true,
-        },
-       
+        default: 'Point',
+        enum: ['Point'],
+        required: true
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        required: true
+      },
+      address: {
+        type: String,
+        required: true
+      }
+    },
     fuelAvailable: {
       petrol: {
         type: Number,
@@ -48,6 +59,8 @@ const fuelPumpSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Create a 2dsphere index on the location field
+fuelPumpSchema.index({ location: "2dsphere" });
 
 fuelPumpSchema.methods.generateAuthToken = function(){
     const token = jwt.sign({_id:this._id}, process.env.JWT_SECRET,{expiresIn:'1d'});
@@ -61,6 +74,20 @@ fuelPumpSchema.methods.comparePassword = async function (password)  {
 fuelPumpSchema.statics.hashPassword = async function (password) {
     return await bcrypt.hash(password,10);
 }
+
+// Example registration request body:
+/*
+{
+  "name": "Shell Pump Station",
+  "email": "shell@example.com",
+  "password": "securepassword123",
+  "location": {
+    "type": "Point",
+    "coordinates": [73.0479, 33.6844], // [longitude, latitude]
+    "address": "123 Main Street, City, Country"
+  }
+}
+*/
 
 const fuelPumpModel = mongoose.model('fuelPump',fuelPumpSchema)
 
