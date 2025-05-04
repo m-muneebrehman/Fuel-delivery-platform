@@ -5,71 +5,152 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const blacklistTokenModel = require("../models/blacklistToken.model");
 
-module.exports.authUser = async (req, res, next) => {
-  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized 1" });
-  }
-
-  const isBlackListed = await blacklistTokenModel.findOne({token:token});
-
-  if(isBlackListed){
-    return res.status(401).json({message:"Unauthorized 2"});
-  }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await userModel.findById(decoded._id);
-    req.user = user;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Unauthorized 3" });
-  }
+/**
+ * Extract token from request
+ * @param {Object} req - Express request object
+ * @returns {string|null} - Extracted token or null
+ */
+const extractToken = (req) => {
+    return req.cookies.token || 
+           req.headers.authorization?.split(" ")[1] || 
+           req.query.token;
 };
 
-module.exports.authFuelPump = async (req, res, next) => {
-  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized 1" });
-  }
-
-  const isBlackListed = await blacklistTokenModel.findOne({token:token});
-
-  if(isBlackListed){
-    return res.status(401).json({message:"Unauthorized 2"});
-  }
-
-  try { 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const fuelPump = await fuelPumpModel.findById(decoded._id);
-    req.fuelPump = fuelPump;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Unauthorized 3" });
-  }
-  
+/**
+ * Check if token is blacklisted
+ * @param {string} token - JWT token
+ * @returns {Promise<boolean>} - Whether token is blacklisted
+ */
+const isTokenBlacklisted = async (token) => {
+    const blacklisted = await blacklistTokenModel.findOne({ token });
+    return !!blacklisted;
 };
 
-module.exports.authDeliveryBoy = async (req, res, next) => {
-  const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized 1" });
-  }
+/**
+ * Base authentication middleware
+ * @param {Function} model - Mongoose model to find user
+ * @param {string} userType - Type of user (user/fuelPump/deliveryBoy)
+ * @returns {Function} - Express middleware function
+ */
+const createAuthMiddleware = (model, userType) => {
+    return async (req, res, next) => {
+        try {
+            const token = extractToken(req);
+            if (!token) {
+                return res.status(401).json({
+                    success: false,
+                    message: "No authentication token provided"
+                });
+            }
 
-  const isBlackListed = await blacklistTokenModel.findOne({token:token});
+            if (await isTokenBlacklisted(token)) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Token has been revoked"
+                });
+            }
 
-  if(isBlackListed){
-    return res.status(401).json({message:"Unauthorized 2"});
-  }
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await model.findById(decoded._id);
+            
+            if (!user) {
+                return res.status(401).json({
+                    success: false,
+                    message: "User not found"
+                });
+            }
 
-  try {   
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const deliveryBoy = await deliveryBoyModel.findById(decoded._id);
-    req.deliveryBoy = deliveryBoy;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Unauthorized 3" });
-  }
-  
-}
+            if (user.status !== 'active') {
+                return res.status(403).json({
+                    success: false,
+                    message: "Account is not active"
+                });
+            }
+
+            req[userType] = user;
+            next();
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    success: false,
+                    message: "Token has expired"
+                });
+            }
+            return res.status(401).json({
+                success: false,
+                message: "Invalid authentication token"
+            });
+        }
+    };
+};
+
+/**
+ * Check if user has required role
+ * @param {Array<string>} roles - Allowed roles
+ * @returns {Function} - Express middleware function
+ */
+const checkRole = (roles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required"
+            });
+        }
+
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: "Insufficient permissions"
+            });
+        }
+
+        next();
+    };
+};
+
+// Export middleware functions
+module.exports = {
+    // Base authentication middleware
+    authUser: createAuthMiddleware(userModel, 'user'),
+    authFuelPump: createAuthMiddleware(fuelPumpModel, 'fuelPump'),
+    authDeliveryBoy: createAuthMiddleware(deliveryBoyModel, 'deliveryBoy'),
+
+    // Role-based middleware
+    adminMiddleware: checkRole(['admin']),
+    fuelPumpMiddleware: checkRole(['fuel_pump']),
+    deliveryBoyMiddleware: checkRole(['delivery_boy']),
+    userMiddleware: checkRole(['user']),
+
+    // Combined middleware
+    authMiddleware: (req, res, next) => {
+        const token = extractToken(req);
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "No authentication token provided"
+            });
+        }
+        next();
+    },
+
+    // Optional authentication middleware
+    optionalAuth: async (req, res, next) => {
+        const token = extractToken(req);
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const user = await userModel.findById(decoded._id);
+                if (user && user.status === 'active') {
+                    req.user = user;
+                }
+            } catch (error) {
+                // Token is invalid, but we don't block the request
+                console.log('Invalid token in optional auth:', error.message);
+            }
+        }
+        next();
+    }
+};
 
 

@@ -154,15 +154,6 @@ All endpoints return appropriate HTTP status codes and error messages in case of
 - `password`: String (required, stored as hashed value)
 - `socketId`: String (optional)
 
-
-
-
-
-
-
-
-
-
 ## Fuel Pump Management APIs
 
 ### Register Fuel Pump
@@ -279,43 +270,24 @@ Invalidates the current fuel pump station's token.
 - `401 Unauthorized`: Missing or invalid token
 - `500 Internal Server Error`: Server-side error
 
+## Delivery Boy APIs
 
+### Register Delivery Boy
+Creates a new delivery boy account.
 
-
-
-# Delivery Boy API Documentation
-
-This documentation provides details about the Delivery Boy API endpoints, including request/response formats, validation rules, and authentication requirements.
-
-## Base URL
-```
-http://your-domain/api/delivery-boy
-```
-
-## Authentication
-Most endpoints require JWT authentication. Include the token in the Authorization header:
-```
-Authorization: Bearer your_jwt_token_here
-```
-
-## Endpoints
-
-### 1. Register Delivery Boy
-Register a new delivery boy in the system.
-
-**Endpoint:** `POST /register`
+**Endpoint:** `POST /deliveryBoys/register`
 
 **Request Body:**
 ```json
 {
-    "email": "deliveryboy1@example.com",
-    "password": "123456",
-    "fullName": "John Doe",
-    "phoneNumber": "03001234567",
-    "cnicNumber": "35201-1234567-1",
-    "photo": "https://example.com/photo.jpg",
-    "address": "123 Main Street, City, Country",
-    "fuelPump": "Shell Station #1"
+  "email": "deliveryboy1@example.com",
+  "password": "123456",
+  "fullName": "John Doe",
+  "phoneNumber": "03001234567",
+  "cnicNumber": "35201-1234567-1",
+  "photo": "https://example.com/photo.jpg",
+  "address": "123 Main Street, City, Country",
+  "fuelPump": "Shell Station #1"
 }
 ```
 
@@ -329,34 +301,34 @@ Register a new delivery boy in the system.
 - `address`: Minimum 5 characters
 - `fuelPump`: Required field
 
-**Response:**
+**Response (201 Created):**
 ```json
 {
-    "success": true,
-    "message": "Delivery boy registered successfully",
-    "data": {
-        "id": "user_id",
-        "email": "deliveryboy1@example.com",
-        "fullName": "John Doe",
-        "phoneNumber": "03001234567",
-        "cnicNumber": "35201-1234567-1",
-        "photo": "https://example.com/photo.jpg",
-        "address": "123 Main Street, City, Country",
-        "fuelPump": "Shell Station #1"
-    }
+  "success": true,
+  "message": "Delivery boy registered successfully",
+  "data": {
+    "id": "user_id",
+    "email": "deliveryboy1@example.com",
+    "fullName": "John Doe",
+    "phoneNumber": "03001234567",
+    "cnicNumber": "35201-1234567-1",
+    "photo": "https://example.com/photo.jpg",
+    "address": "123 Main Street, City, Country",
+    "fuelPump": "Shell Station #1"
+  }
 }
 ```
 
-### 2. Login Delivery Boy
-Authenticate a delivery boy and get access token.
+### Login Delivery Boy
+Authenticates a delivery boy and returns a token.
 
-**Endpoint:** `POST /login`
+**Endpoint:** `POST /deliveryBoys/login`
 
 **Request Body:**
 ```json
 {
-    "email": "deliveryboy1@example.com",
-    "password": "123456"
+  "email": "deliveryboy1@example.com",
+  "password": "123456"
 }
 ```
 
@@ -364,472 +336,516 @@ Authenticate a delivery boy and get access token.
 - `email`: Must be a valid email address
 - `password`: Minimum 5 characters
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
-    "success": true,
-    "message": "Login successful",
-    "data": {
-        "token": "jwt_token_here",
-        "user": {
-            "id": "user_id",
-            "email": "deliveryboy1@example.com",
-            "fullName": "John Doe"
-        }
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "token": "jwt_token_here",
+    "user": {
+      "id": "user_id",
+      "email": "deliveryboy1@example.com",
+      "fullName": "John Doe"
     }
+  }
 }
 ```
 
-### 3. Get Delivery Boy Profile
-Get the profile information of the authenticated delivery boy.
+### Get Delivery Boy Profile
+Retrieves the profile of the authenticated delivery boy.
 
-**Endpoint:** `GET /profile`
+**Endpoint:** `GET /deliveryBoys/profile`
 
-**Headers Required:**
-```
-Authorization: Bearer your_jwt_token_here
-```
+**Headers:**
+- `Authorization`: Bearer jwt_token_string
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
-    "success": true,
-    "data": {
-        "id": "user_id",
-        "email": "deliveryboy1@example.com",
-        "fullName": "John Doe",
-        "phoneNumber": "03001234567",
-        "cnicNumber": "35201-1234567-1",
-        "photo": "https://example.com/photo.jpg",
-        "address": "123 Main Street, City, Country",
-        "fuelPump": "Shell Station #1"
-    }
-}
-```
-
-### 4. Logout Delivery Boy
-Logout the authenticated delivery boy.
-
-**Endpoint:** `GET /logout`
-
-**Headers Required:**
-```
-Authorization: Bearer your_jwt_token_here
-```
-
-**Response:**
-```json
-{
-    "success": true,
-    "message": "Logged out successfully"
-}
-```
-
-## Error Responses
-
-All endpoints may return the following error responses:
-
-### Validation Error
-```json
-{
-    "success": false,
-    "message": "Validation Error",
-    "errors": [
-        {
-            "field": "email",
-            "message": "Invalid Email"
-        }
-    ]
-}
-```
-
-### Authentication Error
-```json
-{
-    "success": false,
-    "message": "Unauthorized",
-    "error": "Invalid or expired token"
-}
-```
-
-### Server Error
-```json
-{
-    "success": false,
-    "message": "Internal Server Error",
-    "error": "Error message details"
-}
-```
-
-## Testing
-
-### Test Data for Registration
-```json
-{
+  "success": true,
+  "data": {
+    "id": "user_id",
     "email": "deliveryboy1@example.com",
-    "password": "123456",
     "fullName": "John Doe",
     "phoneNumber": "03001234567",
     "cnicNumber": "35201-1234567-1",
     "photo": "https://example.com/photo.jpg",
     "address": "123 Main Street, City, Country",
     "fuelPump": "Shell Station #1"
+  }
 }
 ```
 
-### Test Data for Login
+### Logout Delivery Boy
+Invalidates the current delivery boy's token.
+
+**Endpoint:** `GET /deliveryBoys/logout`
+
+**Headers:**
+- `Authorization`: Bearer jwt_token_string
+
+**Response (200 OK):**
 ```json
 {
-    "email": "deliveryboy1@example.com",
-    "password": "123456"
+  "success": true,
+  "message": "Logged out successfully"
 }
 ```
 
-## Notes
-- All timestamps are in ISO 8601 format
-- All monetary values are in the base currency unit
-- File uploads should be handled through multipart/form-data
-- Rate limiting may be applied to prevent abuse
-- Tokens expire after 24 hours
+## Inventory APIs
 
+### Create Inventory Item
+Creates a new inventory item.
 
+**Endpoint:** `POST /inventory/`
 
-# Inventory API Documentation
+**Auth Required:** Yes (Admin)
 
-## Overview
-This document provides detailed information about the Inventory API endpoints, including request/response formats, authentication requirements, and example usage.
-
-## Base URL
-```
-http://localhost:3000/inventory
-```
-
-## Authentication
-Protected routes require a valid JWT token in the Authorization header:
-```
-Authorization: Bearer your_jwt_token_here
-```
-
-## API Endpoints
-
-### 1. Create Inventory Item
-- **URL**: `/inventory`
-- **Method**: `POST`
-- **Auth Required**: Yes (Admin)
-- **Request Body**:
+**Request Body:**
 ```json
 {
-    "name": "Bosch Brake Pad Set",
-    "description": "High-performance brake pads for front wheels",
-    "category": "Brake System",
-    "price": 89.99,
-    "quantity": 50,
-    "manufacturer": "Bosch",
-    "compatibleVehicles": [
-        {
-            "make": "Toyota",
-            "model": "Camry",
-            "year": 2020
-        }
+  "name": "Bosch Brake Pad Set",
+  "description": "High-performance brake pads for front wheels",
+  "category": "Brake System",
+  "price": 89.99,
+  "quantity": 50,
+  "manufacturer": "Bosch",
+  "compatibleVehicles": [
+    {
+      "make": "Toyota",
+      "model": "Camry",
+      "year": 2020
+    }
+  ],
+  "images": [
+    "https://example.com/brakepad1.jpg"
+  ],
+  "specifications": {
+    "material": "Ceramic",
+    "thickness": "12mm"
+  },
+  "sku": "BRK-BOS-FRONT-2023",
+  "warranty": {
+    "duration": 24,
+    "description": "2-year manufacturer warranty"
+  }
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "data": {
+    // Created inventory item
+  }
+}
+```
+
+### Get All Inventory Items
+
+**Endpoint:** `GET /inventory/`
+
+**Query Parameters:**
+- `page` (default: 1)
+- `limit` (default: 10)
+- `sortBy` (default: "name")
+- `sortOrder` (default: "asc")
+- `category` (optional)
+- `manufacturer` (optional)
+- `minPrice` (optional)
+- `maxPrice` (optional)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    // Array of inventory items
+  ],
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "limit": 10,
+    "pages": 10
+  }
+}
+```
+
+### Get Inventory Item by ID
+
+**Endpoint:** `GET /inventory/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    // Single inventory item
+  }
+}
+```
+
+### Get Inventory Item by SKU
+
+**Endpoint:** `GET /inventory/sku/:sku`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    // Single inventory item
+  }
+}
+```
+
+### Update Inventory Item
+
+**Endpoint:** `PUT /inventory/:id`
+
+**Auth Required:** Yes (Admin)
+
+**Request Body:**
+```json
+{
+  "name": "Updated Name",
+  "price": 99.99,
+  "description": "Updated description"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    // Updated inventory item
+  }
+}
+```
+
+### Update Inventory Quantity
+
+**Endpoint:** `PATCH /inventory/:id/quantity`
+
+**Auth Required:** Yes (Admin)
+
+**Request Body:**
+```json
+{
+  "quantityChange": 10
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    // Updated inventory item
+  }
+}
+```
+
+### Delete Inventory Item
+
+**Endpoint:** `DELETE /inventory/:id`
+
+**Auth Required:** Yes (Admin)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Inventory item deleted successfully"
+}
+```
+
+### Get Items by Category
+
+**Endpoint:** `GET /inventory/category/:category`
+
+**Query Parameters:**
+- `page` (default: 1)
+- `limit` (default: 10)
+- `sortBy` (default: "name")
+- `sortOrder` (default: "asc")
+
+### Get Items by Manufacturer
+
+**Endpoint:** `GET /inventory/manufacturer/:manufacturer`
+
+**Query Parameters:**
+- `page` (default: 1)
+- `limit` (default: 10)
+- `sortBy` (default: "name")
+- `sortOrder` (default: "asc")
+
+### Search by Compatible Vehicle
+
+**Endpoint:** `GET /inventory/vehicle/search`
+
+**Query Parameters:**
+- `make` (required)
+- `model` (required)
+- `year` (required)
+- `page` (default: 1)
+- `limit` (default: 10)
+- `sortBy` (default: "name")
+- `sortOrder` (default: "asc")
+
+## Order APIs
+
+### Create Order
+
+**Endpoint:** `POST /orders/`
+
+**Auth Required:** Yes
+
+**Request Body:**
+```json
+{
+  "items": [
+    {
+      "itemId": "inventory_item_id",
+      "name": "Brake Pads",
+      "quantity": 2,
+      "price": 89.99
+    }
+  ],
+  "deliveryAddress": {
+    "street": "123 Main St",
+    "city": "City",
+    "state": "State",
+    "zipCode": "12345",
+    "coordinates": {
+      "lat": 40.7128,
+      "lng": -74.0060
+    }
+  },
+  "paymentMethod": "credit-card",
+  "deliveryDate": "2024-03-01",
+  "deliveryTimeSlot": {
+    "start": "09:00",
+    "end": "12:00"
+  },
+  "notes": "Please deliver in the morning"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "order_id",
+  "items": [
+    {
+      "itemId": "inventory_item_id",
+      "name": "Brake Pads",
+      "quantity": 2,
+      "price": 89.99
+    }
+  ],
+  "totalAmount": 179.98,
+  "status": "pending",
+  "paymentStatus": "pending",
+  "deliveryDate": "2024-03-01",
+  "deliveryTimeSlot": {
+    "start": "09:00",
+    "end": "12:00"
+  }
+}
+```
+
+### Get User Orders
+
+**Endpoint:** `GET /orders/my-orders`
+
+**Auth Required:** Yes
+
+**Response:**
+```json
+[
+  {
+    "id": "order_id",
+    "items": [
+      {
+        "itemId": "inventory_item_id",
+        "name": "Brake Pads",
+        "quantity": 2,
+        "price": 89.99
+      }
     ],
-    "images": [
-        "https://example.com/brakepad1.jpg"
-    ],
-    "specifications": {
-        "material": "Ceramic",
-        "thickness": "12mm"
+    "totalAmount": 179.98,
+    "status": "pending",
+    "paymentStatus": "pending",
+    "deliveryDate": "2024-03-01",
+    "deliveryTimeSlot": {
+      "start": "09:00",
+      "end": "12:00"
+    }
+  }
+]
+```
+
+### Get Order by ID
+
+**Endpoint:** `GET /orders/:id`
+
+**Auth Required:** Yes
+
+### Update Order Status
+
+**Endpoint:** `PUT /orders/:id/status`
+
+**Auth Required:** Yes
+
+**Request Body:**
+```json
+{
+  "status": "confirmed"
+}
+```
+
+### Cancel Order
+
+**Endpoint:** `PUT /orders/:id/cancel`
+
+**Auth Required:** Yes
+
+### Get All Orders (Admin)
+
+**Endpoint:** `GET /orders/`
+
+**Auth Required:** Yes (Admin)
+
+## Maps APIs
+
+### Get Delivery Route
+
+**Endpoint:** `GET /maps/route`
+
+**Auth Required:** Yes
+
+**Query Parameters:**
+```
+origin=40.7128,-74.0060&destination=40.7130,-74.0062
+```
+
+**Response:**
+```json
+{
+  "distance": {
+    "text": "2.3 km",
+    "value": 2300
+  },
+  "duration": {
+    "text": "5 mins",
+    "value": 300
+  },
+  "route": [
+    {
+      "lat": 40.7128,
+      "lng": -74.0060
     },
-    "sku": "BRK-BOS-FRONT-2023",
-    "warranty": {
-        "duration": 24,
-        "description": "2-year manufacturer warranty"
-    }
-}
-```
-- **Response**: `201 Created`
-```json
-{
-    "success": true,
-    "data": {
-        // Created inventory item
-    }
-}
-```
-
-### 2. Get All Inventory Items
-- **URL**: `/inventory`
-- **Method**: `GET`
-- **Auth Required**: No
-- **Query Parameters**:
-  - `page` (default: 1)
-  - `limit` (default: 10)
-  - `sortBy` (default: "name")
-  - `sortOrder` (default: "asc")
-  - `category` (optional)
-  - `manufacturer` (optional)
-  - `minPrice` (optional)
-  - `maxPrice` (optional)
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": [
-        // Array of inventory items
-    ],
-    "pagination": {
-        "total": 100,
-        "page": 1,
-        "limit": 10,
-        "pages": 10
-    }
-}
-```
-
-### 3. Get Item by ID
-- **URL**: `/inventory/:id`
-- **Method**: `GET`
-- **Auth Required**: No
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        // Single inventory item
-    }
-}
-```
-
-### 4. Get Item by SKU
-- **URL**: `/inventory/sku/:sku`
-- **Method**: `GET`
-- **Auth Required**: No
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        // Single inventory item
-    }
-}
-```
-
-### 5. Update Inventory Item
-- **URL**: `/inventory/:id`
-- **Method**: `PUT`
-- **Auth Required**: Yes (Admin)
-- **Request Body**:
-```json
-{
-    "name": "Updated Name",
-    "price": 99.99,
-    "description": "Updated description"
-}
-```
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        // Updated inventory item
-    }
-}
-```
-
-### 6. Update Inventory Quantity
-- **URL**: `/inventory/:id/quantity`
-- **Method**: `PATCH`
-- **Auth Required**: Yes (Admin)
-- **Request Body**:
-```json
-{
-    "quantityChange": 10
-}
-```
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": {
-        // Updated inventory item
-    }
-}
-```
-
-### 7. Delete Inventory Item
-- **URL**: `/inventory/:id`
-- **Method**: `DELETE`
-- **Auth Required**: Yes (Admin)
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "message": "Inventory item deleted successfully"
-}
-```
-
-### 8. Get Items by Category
-- **URL**: `/inventory/category/:category`
-- **Method**: `GET`
-- **Auth Required**: No
-- **Query Parameters**:
-  - `page` (default: 1)
-  - `limit` (default: 10)
-  - `sortBy` (default: "name")
-  - `sortOrder` (default: "asc")
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": [
-        // Array of inventory items
-    ],
-    "pagination": {
-        "total": 100,
-        "page": 1,
-        "limit": 10,
-        "pages": 10
-    }
-}
-```
-
-### 9. Get Items by Manufacturer
-- **URL**: `/inventory/manufacturer/:manufacturer`
-- **Method**: `GET`
-- **Auth Required**: No
-- **Query Parameters**:
-  - `page` (default: 1)
-  - `limit` (default: 10)
-  - `sortBy` (default: "name")
-  - `sortOrder` (default: "asc")
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": [
-        // Array of inventory items
-    ],
-    "pagination": {
-        "total": 100,
-        "page": 1,
-        "limit": 10,
-        "pages": 10
-    }
-}
-```
-
-### 10. Search by Compatible Vehicle
-- **URL**: `/inventory/vehicle/search`
-- **Method**: `GET`
-- **Auth Required**: No
-- **Query Parameters**:
-  - `make` (required)
-  - `model` (required)
-  - `year` (required)
-  - `page` (default: 1)
-  - `limit` (default: 10)
-  - `sortBy` (default: "name")
-  - `sortOrder` (default: "asc")
-- **Response**: `200 OK`
-```json
-{
-    "success": true,
-    "data": [
-        // Array of compatible inventory items
-    ],
-    "pagination": {
-        "total": 100,
-        "page": 1,
-        "limit": 10,
-        "pages": 10
-    }
-}
-```
-
-## Error Responses
-All endpoints may return the following error responses:
-
-### 400 Bad Request
-```json
-{
-    "success": false,
-    "message": "Validation error message",
-    "error": {
-        // Detailed validation errors
-    }
-}
-```
-
-### 401 Unauthorized
-```json
-{
-    "success": false,
-    "message": "Unauthorized access"
-}
-```
-
-### 403 Forbidden
-```json
-{
-    "success": false,
-    "message": "Access forbidden"
-}
-```
-
-### 404 Not Found
-```json
-{
-    "success": false,
-    "message": "Resource not found"
-}
-```
-
-### 500 Internal Server Error
-```json
-{
-    "success": false,
-    "message": "Internal server error"
-}
-```
-
-## Data Models
-
-### Inventory Item
-```json
-{
-    "name": "String",
-    "description": "String",
-    "category": "String",
-    "price": "Number",
-    "quantity": "Number",
-    "manufacturer": "String",
-    "compatibleVehicles": [
-        {
-            "make": "String",
-            "model": "String",
-            "year": "Number"
-        }
-    ],
-    "images": ["String"],
-    "specifications": {
-        "type": "Map",
-        "of": "String"
+    {
+      "lat": 40.7129,
+      "lng": -74.0061
     },
-    "sku": "String",
-    "isActive": "Boolean",
-    "warranty": {
-        "duration": "Number",
-        "description": "String"
+    {
+      "lat": 40.7130,
+      "lng": -74.0062
     }
+  ]
 }
 ```
 
-## Categories
-Available categories for inventory items:
-- Engine Parts
-- Brake System
-- Transmission
-- Electrical
-- Suspension
-- Body Parts
-- Filters
-- Other
+### Get Address Coordinates
+
+**Endpoint:** `GET /maps/address-coordinates`
+
+**Query Parameters:**
+```
+address=123 Main Street, City, Country
+```
+
+### Get Location Suggestions
+
+**Endpoint:** `GET /maps/location-suggestions`
+
+**Query Parameters:**
+```
+query=Main Street
+```
+
+### Get Distance
+
+**Endpoint:** `GET /maps/distance`
+
+**Query Parameters:**
+```
+origin=40.7128,-74.0060&destination=40.7130,-74.0062
+```
+
+### Get Nearby Registered Fuel Pumps
+
+**Endpoint:** `GET /maps/nearby-registered-fuel-pumps`
+
+**Query Parameters:**
+```
+lat=40.7128&lng=-74.0060&radius=5000
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "pump_id",
+    "location": "Downtown Gas Station",
+    "address": "100 Main St, City, State 12345",
+    "coordinates": {
+      "latitude": 40.7130,
+      "longitude": -74.0062
+    },
+    "distance": {
+      "text": "0.5 km",
+      "value": 500
+    },
+    "fuelTypes": ["Regular", "Premium", "Diesel"],
+    "status": "operational"
+  }
+]
+```
+
+### Get Delivery Time Estimate
+
+**Endpoint:** `GET /maps/delivery-time`
+
+**Query Parameters:**
+```
+origin=40.7128,-74.0060&destination=40.7130,-74.0062&mode=driving
+```
+
+**Response:**
+```json
+{
+  "estimatedTime": {
+    "text": "5 mins",
+    "value": 300
+  },
+  "trafficConditions": "moderate",
+  "alternativeRoutes": [
+    {
+      "distance": {
+        "text": "2.5 km",
+        "value": 2500
+      },
+      "duration": {
+        "text": "6 mins",
+        "value": 360
+      }
+    }
+  ]
+}
+```

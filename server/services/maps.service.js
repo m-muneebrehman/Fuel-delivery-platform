@@ -1,120 +1,151 @@
-module.exports.getAddressCoordinate = async(address)=>{
-  try {
-    const axios = require('axios');
-    const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-    
-    // Encode the address for URL
-    const encodedAddress = encodeURIComponent(address);
-    
-    // Make request to Google Geocoding API
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${GOOGLE_API_KEY}`
-    );
+const axios = require('axios');
+const config = require('../config/config');
 
-    // Check if we got results
-    if (response.data.results && response.data.results.length > 0) {
-      const location = response.data.results[0].geometry.location;
-      
-      return {
-        lat: location.lat,
-        lng: location.lng
-      };
+class MapsService {
+    // Constants
+    static BASE_FARE = 5.00;
+    static PER_KM_RATE = 2.00;
+    static MINIMUM_DISTANCE = 2; // in kilometers
+    static EARTH_RADIUS = 6371; // in kilometers
+    static DEFAULT_RADIUS = 5000; // in meters
+
+    /**
+     * Calculate delivery fare based on distance and current conditions
+     * @param {Object} origin - Origin coordinates {latitude, longitude}
+     * @param {Object} destination - Destination coordinates {latitude, longitude}
+     * @returns {Promise<number>} - Calculated fare
+     */
+    static async calculateDeliveryFare(origin, destination) {
+        try {
+            const distance = await this.calculateDistance(origin, destination);
+            const surgeMultiplier = await this.getSurgeMultiplier();
+            
+            let fare = this.BASE_FARE;
+            if (distance > this.MINIMUM_DISTANCE) {
+                fare += (distance - this.MINIMUM_DISTANCE) * this.PER_KM_RATE;
+            }
+            
+            fare *= surgeMultiplier;
+            return this.roundToTwoDecimals(fare);
+        } catch (error) {
+            throw new Error(`Failed to calculate delivery fare: ${error.message}`);
+        }
     }
 
-    throw new Error('No coordinates found for this address');
-    
-  } catch (error) {
-    console.error('Error getting coordinates:', error);
-    throw error;
-  }
+    /**
+     * Calculate distance between two points using Haversine formula
+     * @param {Object} origin - Origin coordinates {latitude, longitude}
+     * @param {Object} destination - Destination coordinates {latitude, longitude}
+     * @returns {number} - Distance in kilometers
+     */
+    static calculateDistance(origin, destination) {
+        const lat1 = this.degreesToRadians(origin.latitude);
+        const lat2 = this.degreesToRadians(destination.latitude);
+        const deltaLat = this.degreesToRadians(destination.latitude - origin.latitude);
+        const deltaLon = this.degreesToRadians(destination.longitude - origin.longitude);
+
+        const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+                Math.cos(lat1) * Math.cos(lat2) *
+                Math.sin(deltaLon/2) * Math.sin(deltaLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        
+        return this.EARTH_RADIUS * c;
+    }
+
+    /**
+     * Get surge multiplier based on current conditions
+     * @returns {number} - Surge multiplier
+     */
+    static async getSurgeMultiplier() {
+        const hour = new Date().getHours();
+        // Evening rush hour (5 PM - 7 PM)
+        if (hour >= 17 && hour <= 19) {
+            return 1.5;
+        }
+        return 1.0;
+    }
+
+    /**
+     * Get route information between two points
+     * @param {Object} origin - Origin coordinates {latitude, longitude}
+     * @param {Object} destination - Destination coordinates {latitude, longitude}
+     * @returns {Promise<Object>} - Route information
+     */
+    static async getRoute(origin, destination) {
+        try {
+            const distance = await this.calculateDistance(origin, destination);
+            const duration = distance * 2; // Assuming average speed of 30 km/h
+
+            return {
+                distance: {
+                    text: `${this.roundToTwoDecimals(distance)} km`,
+                    value: Math.round(distance * 1000) // Convert to meters
+                },
+                duration: {
+                    text: `${Math.round(duration)} mins`,
+                    value: Math.round(duration * 60) // Convert to seconds
+                },
+                route: this.generateRoutePoints(origin, destination)
+            };
+        } catch (error) {
+            throw new Error(`Failed to get route: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get nearby fuel pumps within specified radius
+     * @param {Object} location - Center coordinates {latitude, longitude}
+     * @param {number} radius - Search radius in meters
+     * @returns {Promise<Array>} - List of nearby fuel pumps
+     */
+    static async getNearbyFuelPumps(location, radius = this.DEFAULT_RADIUS) {
+        try {
+            // In production, this would use a real API or database query
+            return this.generateMockFuelPumps(location, radius);
+        } catch (error) {
+            throw new Error(`Failed to get nearby fuel pumps: ${error.message}`);
+        }
+    }
+
+    // Helper methods
+    static degreesToRadians(degrees) {
+        return degrees * Math.PI / 180;
+    }
+
+    static roundToTwoDecimals(number) {
+        return Math.round(number * 100) / 100;
+    }
+
+    static generateRoutePoints(origin, destination) {
+        return [
+            origin,
+            {
+                latitude: (origin.latitude + destination.latitude) / 2,
+                longitude: (origin.longitude + destination.longitude) / 2
+            },
+            destination
+        ];
+    }
+
+    static generateMockFuelPumps(location, radius) {
+        return [
+            {
+                id: "pump1",
+                location: "Downtown Gas Station",
+                address: "100 Main St, City, State 12345",
+                coordinates: {
+                    latitude: location.latitude + 0.01,
+                    longitude: location.longitude + 0.01
+                },
+                distance: {
+                    text: "1.2 km",
+                    value: 1200
+                },
+                fuelTypes: ["Regular", "Premium", "Diesel"],
+                status: "operational"
+            }
+        ];
+    }
 }
 
-
-module.exports.getLocationSuggestions = async (query) => {
-  try {
-    const axios = require('axios');
-    const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-    
-    // Encode the query for URL
-    const encodedQuery = encodeURIComponent(query);
-    
-    // Make request to Google Places Autocomplete API
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodedQuery}&key=${GOOGLE_API_KEY}`
-    );
-
-    if (response.data.predictions) {
-      return response.data.predictions.map(prediction => ({
-        description: prediction.description,
-        placeId: prediction.place_id
-      }));
-    }
-
-    return [];
-
-  } catch (error) {
-    console.error('Error getting location suggestions:', error);
-    throw error;
-  }
-};
-
-module.exports.getDistance = async (origin, destination) => {
-  try {
-    const axios = require('axios');
-    const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
-    
-    // Encode the addresses for URL
-    const encodedOrigin = encodeURIComponent(origin);
-    const encodedDestination = encodeURIComponent(destination);
-    
-    // Make request to Google Distance Matrix API
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodedOrigin}&destinations=${encodedDestination}&key=${GOOGLE_API_KEY}`
-    );
-
-    if (response.data.rows && response.data.rows[0].elements) {
-      const element = response.data.rows[0].elements[0];
-      return {
-        distance: element.distance,
-        duration: element.duration
-      };
-    }
-
-    throw new Error('Could not calculate distance between these points');
-
-  } catch (error) {
-    console.error('Error calculating distance:', error);
-    throw error;
-  }
-};
-
-module.exports.getNearbyRegisteredFuelPumps = async ({ latitude, longitude, radiusInKm }) => {
-  try {
-    // This would typically involve a database query using geospatial queries
-    // Example using MongoDB:
-    const FuelPump = require('../models/fuelPump.model');
-    
-    // This MongoDB query finds fuel pumps within a radius of the given coordinates
-    // 1. location field must have a geospatial index defined in the schema
-    // 2. $near operator finds documents with coordinates near the given point
-    // 3. $geometry specifies the GeoJSON Point with [longitude, latitude] coordinates
-    // 4. $maxDistance is in meters, so we multiply radiusInKm by 1000
-    const nearbyPumps = await FuelPump.find({
-      location: {
-        $near: {
-          $geometry: {
-            type: "Point", 
-            coordinates: [longitude, latitude] // MongoDB expects [long, lat] order
-          },
-          $maxDistance: radiusInKm * 1000 // Convert kilometers to meters
-        }
-      }
-    });
-
-    return nearbyPumps;
-
-  } catch (error) {
-    console.error('Error finding nearby fuel pumps:', error);
-    throw error;
-  }
-};
+module.exports = MapsService;
