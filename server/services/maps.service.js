@@ -1,5 +1,9 @@
 const axios = require('axios');
-const config = require('../config/config');
+// This service handles map-related functionality including:
+// - Distance calculations between coordinates using Haversine formula
+// - Delivery fare calculations based on distance
+// - Surge pricing multipliers
+// - Integration with mapping/geocoding APIs
 
 class MapsService {
     // Constants
