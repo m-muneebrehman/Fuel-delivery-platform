@@ -2,91 +2,97 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-const LoginPage = () => {
+const SignUpPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    username: "",
     email: "",
     password: "",
-    rememberMe: false
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value
+      [name]: value,
     });
+
+    // Clear password match error when typing in either password field
+    if (name === "password" || name === "confirmPassword") {
+      setPasswordError("");
+    }
   };
 
-  const handleLogin = async (e) => {
+  const validateForm = () => {
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return false;
+    }
+
+    // Check password strength (at least 5 characters)
+    const passwordRegex = /^.{5,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setPasswordError("Password must be at least 5 characters long");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSignup = async (e) => {
     e.preventDefault();
+
+    // Reset errors
     setError("");
+    setPasswordError("");
+
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Make API call to your backend authentication endpoint
-      const response = await fetch("http://localhost:5000/users/login", {
+      // Make API call to your backend registration endpoint
+      const response = await fetch("http://localhost:5000/users/register", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userName: formData.username,
           email: formData.email,
-          password: formData.password
-        })
+          password: formData.password,
+        }),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-      
-      console.log("Token received:", data.token);
-      
-      // Ensure token is a string and not undefined/null before storing
-      if (!data.token) {
-        throw new Error("No token received from server");
+        throw new Error(data.message || "Registration failed");
       }
 
-      // Store user data or token in localStorage or sessionStorage based on remember me
-      if (formData.rememberMe) {
-        localStorage.setItem("token", data.token);
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-      } else {
-        sessionStorage.setItem("token", data.token);
-        if (data.user) {
-          sessionStorage.setItem("user", JSON.stringify(data.user));
-        }
-      }
+      // Store user data or token (if your API returns it)
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("user", JSON.stringify(data.user));
 
-      // Verify storage was successful
-      const storedToken = formData.rememberMe 
-        ? localStorage.getItem("token") 
-        : sessionStorage.getItem("token");
-        
-      console.log("Token stored successfully:", storedToken);
-
-      // Redirect to dashboard on successful login
+      // Redirect to dashboard or login page
       navigate("/user/dashboard");
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.message || "An error occurred during login");
+      setError(err.message || "An error occurred during registration");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignup = () => {
-    navigate("/auth/user/signup");
-  };
-
-  const handleForgotPassword = () => {
-    navigate("/forgot-password");
+  const handleLoginRedirect = () => {
+    navigate("/auth/user/login");
   };
 
   return (
@@ -113,7 +119,7 @@ const LoginPage = () => {
             PetrolFinder Community
           </h1>
           <p className="text-gray-400">
-            Home to thousands of drivers worldwide
+            Join thousands of drivers worldwide and find fuel easily
           </p>
           <a href="#" className="text-green-500 hover:text-green-400">
             Know more
@@ -124,14 +130,12 @@ const LoginPage = () => {
       {/* Right Side */}
       <div className="w-full sm:w-1/2 bg-white p-12 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back!
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Get Started</h1>
           <h2 className="text-3xl font-bold text-gray-900 mb-5">
-            Login to your account
+            Create your account
           </h2>
           <p className="text-gray-600 mb-6">
-            It's nice to see you again. Ready to find fuel?
+            Join our community and discover the best fuel options near you.
           </p>
 
           {error && (
@@ -140,7 +144,17 @@ const LoginPage = () => {
             </div>
           )}
 
-          <form className="space-y-4" onSubmit={handleLogin}>
+          <form className="space-y-4" onSubmit={handleSignup}>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Your username"
+              className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+              required
+              minLength={3}
+            />
             <input
               type="email"
               name="email"
@@ -158,34 +172,29 @@ const LoginPage = () => {
               placeholder="Your password"
               className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
               required
+              minLength={6}
             />
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm password"
+              className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+              required
+            />
+
+            {passwordError && (
+              <div className="text-red-600 text-sm mt-1">{passwordError}</div>
+            )}
+
             <Button
               type="submit"
               disabled={isLoading}
               className="w-full py-3 bg-gray-700 hover:bg-gray-800 text-gray-100 font-medium rounded-md"
             >
-              {isLoading ? "Logging in..." : "Login"}
+              {isLoading ? "Creating Account..." : "Sign Up"}
             </Button>
-
-            <div className="flex justify-between items-center mt-4">
-              <label className="flex items-center text-sm text-gray-600">
-                <input 
-                  type="checkbox" 
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
-                  className="h-4 w-4" 
-                />
-                <span className="ml-2">Remember me</span>
-              </label>
-              <button 
-                type="button"
-                onClick={handleForgotPassword}
-                className="text-blue-500 text-sm"
-              >
-                Forgot password?
-              </button>
-            </div>
 
             <div className="relative flex items-center justify-center my-8">
               <div className="border-t border-gray-300 w-full" />
@@ -196,13 +205,13 @@ const LoginPage = () => {
 
             <div className="text-center">
               <p className="text-gray-600">
-                Don't have an account?{" "}
-                <button 
+                Already have an account?{" "}
+                <button
                   type="button"
-                  onClick={handleSignup}
+                  onClick={handleLoginRedirect}
                   className="text-blue-500 font-medium"
                 >
-                  Sign up
+                  Log in
                 </button>
               </p>
             </div>
@@ -213,4 +222,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default SignUpPage;

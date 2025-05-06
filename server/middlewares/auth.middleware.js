@@ -68,6 +68,7 @@ const createAuthMiddleware = (model, userType) => {
             }
 
             req[userType] = user;
+            req.user = user; // ✅ add this line
             next();
         } catch (error) {
             if (error.name === 'TokenExpiredError') {

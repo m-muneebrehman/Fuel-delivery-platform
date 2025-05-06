@@ -1,11 +1,73 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-const LoginPage = () => {
-  const route = useNavigate();
+const PetrolOwnerLoginPage = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = () => {
-    route("/petrol-owner/dashboard"); // Replace with your desired route
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value
+    });
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      // Make API call to your backend authentication endpoint
+      const response = await fetch("/api/petrol-owners/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // Store user data or token in localStorage or sessionStorage based on remember me
+      if (formData.rememberMe) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("petrolOwner", JSON.stringify(data.petrolOwner));
+      } else {
+        sessionStorage.setItem("token", data.token);
+        sessionStorage.setItem("petrolOwner", JSON.stringify(data.petrolOwner));
+      }
+
+      // Redirect to dashboard on successful login
+      navigate("/petrol-owner/dashboard");
+    } catch (err) {
+      setError(err.message || "Invalid email or password. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignup = () => {
+    navigate("/auth/petrol-owner/signup");
+  };
+
+  const handleForgotPassword = () => {
+    navigate("/petrol-owner/forgot-password");
   };
 
   return (
@@ -32,7 +94,7 @@ const LoginPage = () => {
             PetrolFinder Community
           </h1>
           <p className="text-gray-400">
-            Home to thousands of drivers worldwide
+            Manage your fuel station and grow your business
           </p>
           <a href="#" className="text-green-500 hover:text-green-400">
             Know more
@@ -47,38 +109,63 @@ const LoginPage = () => {
             Welcome back!
           </h1>
           <h2 className="text-3xl font-bold text-gray-900 mb-5">
-            Login to your account
+            Login to your station account
           </h2>
           <p className="text-gray-600 mb-6">
-            It's nice to see you again. Ready to find fuel?
+            It's nice to see you again. Ready to manage your fuel station?
           </p>
 
-          <form className="space-y-4">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={handleLogin}>
             <input
-              type="text"
-              placeholder="Your username or email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Your email address"
               className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+              required
             />
             <input
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Your password"
               className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+              required
             />
             <Button
-              onClick={handleLogin}
+              type="submit"
+              disabled={isLoading}
               className="w-full py-3 bg-gray-700 hover:bg-gray-800 text-gray-100 font-medium rounded-md"
             >
-              Login
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
 
             <div className="flex justify-between items-center mt-4">
               <label className="flex items-center text-sm text-gray-600">
-                <input type="checkbox" className="h-4 w-4" />
+                <input 
+                  type="checkbox" 
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onChange={handleChange}
+                  className="h-4 w-4" 
+                />
                 <span className="ml-2">Remember me</span>
               </label>
-              <a href="#" className="text-blue-500 text-sm">
+              <button 
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-blue-500 text-sm"
+              >
                 Forgot password?
-              </a>
+              </button>
             </div>
 
             <div className="relative flex items-center justify-center my-8">
@@ -91,9 +178,13 @@ const LoginPage = () => {
             <div className="text-center">
               <p className="text-gray-600">
                 Don't have an account?{" "}
-                <a href="#" className="text-blue-500 font-medium">
-                  Sign up
-                </a>
+                <button 
+                  type="button"
+                  onClick={handleSignup}
+                  className="text-blue-500 font-medium"
+                >
+                  Register your station
+                </button>
               </p>
             </div>
           </form>
@@ -103,4 +194,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default PetrolOwnerLoginPage;

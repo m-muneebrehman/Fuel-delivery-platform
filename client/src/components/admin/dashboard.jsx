@@ -1,9 +1,15 @@
-import { useState } from 'react';
-import { MapPin, Users, Bell, ChevronDown, Search, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, Users, Bell, ChevronDown, Search, ExternalLink, X, Lock, User } from 'lucide-react';
 import { Link } from 'react-router-dom'; // Assuming you're using React Router
 import PetrolPumpCard from './petrolPumpCard';
 import DetailModal from './detailModal';
 import { Navbar } from './navbar';
+
+// Hard-coded credentials
+const ADMIN_CREDENTIALS = {
+  username: "admin",
+  password: "admin123"
+};
 
 // Dummy data for petrol pumps
 const dummyPetrolPumps = [
@@ -57,10 +63,132 @@ const dummyPetrolPumps = [
 // Dummy data for pending requests count
 const pendingRequestsCount = 4;
 
+// Authentication Modal Component
+function AuthModal({ onLogin }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    // Simulate API delay
+    setTimeout(() => {
+      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        onLogin(true);
+      } else {
+        setError('Invalid username or password');
+      }
+      setLoading(false);
+    }, 800);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div className="bg-blue-600 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-white flex items-center">
+            <Lock size={20} className="mr-2" />
+            Admin Authentication
+          </h2>
+        </div>
+        
+        <div className="p-6">
+          <p className="text-gray-600 mb-6">
+            Please enter your admin credentials to access the dashboard
+          </p>
+          
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <X className="h-5 w-5 text-red-500" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="username">
+                Username
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User size={16} className="text-gray-400" />
+                </div>
+                <input
+                  id="username"
+                  type="text"
+                  className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="password">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock size={16} className="text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-end">
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center justify-center"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying...
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <Lock size={16} className="mr-2" />
+                    Login
+                  </span>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main component
 export default function AdminHomePage() {
   const [selectedPump, setSelectedPump] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Filter petrol pumps based on search
   const filteredPumps = dummyPetrolPumps.filter(pump => 
@@ -72,6 +200,32 @@ export default function AdminHomePage() {
   const handlePumpClick = (pump) => {
     setSelectedPump(pump);
   };
+
+  // Check if user is already authenticated in session storage
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('adminAuthenticated');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Handle successful login
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    // Store authentication status in session storage
+    sessionStorage.setItem('adminAuthenticated', 'true');
+  };
+  
+  // Handle logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('adminAuthenticated');
+  };
+
+  // If not authenticated, show the authentication modal
+  if (!isAuthenticated) {
+    return <AuthModal onLogin={handleLoginSuccess} />;
+  }
   
   return (
     <div className="bg-gray-50 min-h-screen pb-10 my-37">
@@ -84,7 +238,7 @@ export default function AdminHomePage() {
             <p className="text-gray-600">Manage petrol pumps and delivery staff</p>
           </div>
           
-          <div className="mt-4 md:mt-0 flex items-center">
+          <div className="mt-4 md:mt-0 flex items-center space-x-3">
             <Link 
               to="/admin/notifications" 
               className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md flex items-center"
@@ -95,6 +249,13 @@ export default function AdminHomePage() {
                 {pendingRequestsCount}
               </span>
             </Link>
+            
+            <button 
+              onClick={handleLogout}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-md flex items-center"
+            >
+              <span>Logout</span>
+            </button>
           </div>
         </div>
         

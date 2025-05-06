@@ -2,17 +2,19 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Auth from "./pages/auth/auth";
 import { useAppStore } from "./store";
 import Home from "./pages/home/home";
-import PoAuth from "./pages/auth/petrol-owner/po-auth";
+import PoAuth from "./pages/auth/petrol-owner/poLogin";
 import ThemeContextProvider from "@/context/ThemeContextProvider";
 import OwnerDashboard from "./pages/owner/dashboard";
 import DeliveryBoyManagement from "./pages/owner/settings";
-import UserAuth from "./pages/auth/user/user-auth";
+import UserAuth from "./pages/auth/user/userLogin";
 import UserDashboard from "./pages/user/dashboard";
 import OrdersPage from "./components/userDash/orders";
 import FuelDeliverySystem from "./components/userDash/fuel-deliver";
 import UserProfile from "./components/userDash/profile";
 import AdminHome from "./pages/admin/home";
 import Notifications from "./pages/admin/notifications";
+import UserSignUp from "./pages/auth/user/userSignUp";
+import PoSignUp from "./pages/auth/petrol-owner/poSignUp";
 
 const PrivateRoute = ({ children }) => {
   const { userInfo } = useAppStore();
@@ -27,7 +29,8 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />}></Route>
-          <Route path="/auth/petrol-owner" element={<PoAuth />}></Route>
+          <Route path="/auth/petrol-owner/login" element={<PoAuth />}></Route>
+          <Route path="/auth/petrol-owner/signup" element={<PoSignUp />}></Route>
           <Route
             path="/petrol-owner/dashboard"
             element={<OwnerDashboard />}
@@ -36,7 +39,8 @@ const App = () => {
             path="/petrol-owner/settings"
             element={<DeliveryBoyManagement />}
           ></Route>
-          <Route path="/auth/user" element={<UserAuth />}></Route>
+          <Route path="/auth/user/login" element={<UserAuth />}></Route>
+          <Route path="/auth/user/signup" element={<UserSignUp />}></Route>
           <Route path="/user/*" element={<UserDashboard />}>
             <Route path="dashboard" element={<UserDashboard />} />
             <Route path="store" element={<UserDashboard />} />
