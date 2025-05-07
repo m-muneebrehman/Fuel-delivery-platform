@@ -60,12 +60,12 @@ const createAuthMiddleware = (model, userType) => {
                 });
             }
 
-            if (user.status !== 'active') {
-                return res.status(403).json({
-                    success: false,
-                    message: "Account is not active"
-                });
-            }
+            // if (user.status !== 'active') {
+            //     return res.status(403).json({
+            //         success: false,
+            //         message: "Account is not active"
+            //     });
+            // }
 
             req[userType] = user;
             next();
