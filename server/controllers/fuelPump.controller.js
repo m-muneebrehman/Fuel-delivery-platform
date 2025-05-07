@@ -2,6 +2,7 @@ const fuelPumpService = require("../services/fuelPump.service");
 const { validationResult ,cookie} = require("express-validator");
 const fuelPumpModel = require("../models/fuelPump.model");
 const blacklistTokenModel = require("../models/blacklistToken.model");
+const mapsService = require("../services/maps.service");
 
 module.exports.registerFuelPump = async (req, res, next) => {
     const errors = validationResult(req);
@@ -9,21 +10,22 @@ module.exports.registerFuelPump = async (req, res, next) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, location: addressString } = req.body;
+    const { name, email, password, location } = req.body;
 
     const isFuelPumpExist = await fuelPumpModel.findOne({ email });
     if(isFuelPumpExist) {
         return res.status(400).json({ message: "Fuel pump already exists" });
     }
 
+   
     // Get coordinates from Google Maps API
-    const coordinates = await mapsService.getAddressCoordinate(addressString);
+    const location_detail = await mapsService.getAddressCoordinate(location);
 
     // Format location object according to schema
-    const location = {
+    const locationData = {
         type: 'Point',
-        coordinates: [coordinates.lng, coordinates.lat], // MongoDB expects [longitude, latitude]
-        address: addressString
+        coordinates: [location_detail.lng, location_detail.lat], // MongoDB expects [longitude, latitude]
+        address: location
     };
 
     const hashedPassword = await fuelPumpModel.hashPassword(password);
@@ -32,7 +34,7 @@ module.exports.registerFuelPump = async (req, res, next) => {
         name, 
         email, 
         password: hashedPassword, 
-        location 
+        location : locationData
     });
 
     const token = fuelPump.generateAuthToken();
