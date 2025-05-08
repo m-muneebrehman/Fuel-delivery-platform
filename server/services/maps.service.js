@@ -1,4 +1,7 @@
 const axios = require('axios');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+
+
 // This service handles map-related functionality including:
 // - Distance calculations between coordinates using Haversine formula
 // - Delivery fare calculations based on distance
@@ -129,6 +132,25 @@ class MapsService {
             },
             destination
         ];
+    }
+
+    static async getAddressCoordinate(address) {
+        if (!process.env.GOOGLE_API_KEY) {
+            throw new Error('Google Maps API key is not configured. Please add GOOGLE_MAPS_API_KEY to your .env file');
+        }
+        try {
+            const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.GOOGLE_API_KEY}`);
+            
+            if (!response.data.results || response.data.results.length === 0) {
+                throw new Error('No results found for the given address');
+            }
+            return response.data.results[0].geometry.location;
+        } catch (error) {
+            if (error.response) {
+                throw new Error(`Google Maps API error: ${error.response.data.error_message || error.message}`);
+            }
+            throw new Error(`Failed to geocode address: ${error.message}`);
+        }
     }
 
     static generateMockFuelPumps(location, radius) {
