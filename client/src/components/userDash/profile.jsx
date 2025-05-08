@@ -46,9 +46,9 @@ export default function UserProfile() {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include' // Include cookies if your backend uses them
+          }
         });
+        
 
         console.log("Profile response status:", response.status);
 

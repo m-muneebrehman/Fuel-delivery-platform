@@ -5,33 +5,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const blacklistTokenModel = require("../models/blacklistToken.model");
 
-/**
- * Extract token from request
- * @param {Object} req - Express request object
- * @returns {string|null} - Extracted token or null
- */
 const extractToken = (req) => {
     return req.cookies.token || 
            req.headers.authorization?.split(" ")[1] || 
            req.query.token;
 };
 
-/**
- * Check if token is blacklisted
- * @param {string} token - JWT token
- * @returns {Promise<boolean>} - Whether token is blacklisted
- */
 const isTokenBlacklisted = async (token) => {
     const blacklisted = await blacklistTokenModel.findOne({ token });
     return !!blacklisted;
 };
 
-/**
- * Base authentication middleware
- * @param {Function} model - Mongoose model to find user
- * @param {string} userType - Type of user (user/fuelPump/deliveryBoy)
- * @returns {Function} - Express middleware function
- */
 const createAuthMiddleware = (model, userType) => {
     return async (req, res, next) => {
         try {
@@ -85,11 +69,6 @@ const createAuthMiddleware = (model, userType) => {
     };
 };
 
-/**
- * Check if user has required role
- * @param {Array<string>} roles - Allowed roles
- * @returns {Function} - Express middleware function
- */
 const checkRole = (roles) => {
     return (req, res, next) => {
         if (!req.user) {
