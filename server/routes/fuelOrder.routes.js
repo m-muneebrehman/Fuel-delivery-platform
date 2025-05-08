@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const FuelOrderController = require('../controllers/fuelOrder.controller');
-const { authMiddleware, adminMiddleware } = require('../middleware/auth.middleware');
+const { authMiddleware, adminMiddleware } = require('../middlewares/auth.middleware');
 
 // User routes
 router.post('/', authMiddleware, FuelOrderController.createOrder);
