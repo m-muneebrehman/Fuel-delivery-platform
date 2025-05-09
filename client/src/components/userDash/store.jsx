@@ -1,388 +1,467 @@
-import { useState } from 'react';
-import { ShoppingCart, Search, Heart, Filter, ChevronDown, ChevronRight, Menu, X } from 'lucide-react';
-import Swal from 'sweetalert2';
+// File: components/SparePartsStore.jsx - Updated version with complete checkout flow
+import { useState, useEffect } from "react";
+import Header from "./Header";
+import Sidebar from "./Sidebar";
+import ProductList from "./ProductList";
+import Pagination from "./Pagination";
+import MobileFilterMenu from "./MobileFilterMenu";
+import Footer from "./Footer";
+import LoadingSpinner from "./LoadingSpinner";
+import ErrorDisplay from "./ErrorDisplay";
+import Swal from "sweetalert2";
+import { Filter, X } from "lucide-react";
 
 export default function SparePartsStore() {
-  const [cart, setCart] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [compatibleMakes, setCompatibleMakes] = useState([]);
+  const [selectedManufacturers, setSelectedManufacturers] = useState([]);
+  const [selectedMakes, setSelectedMakes] = useState([]);
+  const [priceRange, setPriceRange] = useState(200);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
+  // Categories list
   const categories = [
-    'All',
-    'Engine Parts',
-    'Brake System',
-    'Suspension',
-    'Electrical',
-    'Oils & Fluids',
+    "All",
+    "Engine Parts",
+    "Brake System",
+    "Transmission",
+    "Electrical",
+    "Suspension",
+    "Body Parts",
+    "Filters",
+    "Other",
   ];
 
-  const products = [
-    {
-      id: 1,
-      name: 'Oil Filter',
-      category: 'Engine Parts',
-      price: 12.99,
-      rating: 4.5,
-      image: '/api/placeholder/240/160',
-      description: 'High-quality oil filter for all vehicle types'
-    },
-    {
-      id: 2,
-      name: 'Brake Pads (Set of 4)',
-      category: 'Brake System',
-      price: 45.99,
-      rating: 4.7,
-      image: '/api/placeholder/240/160',
-      description: 'Ceramic brake pads for superior braking performance'
-    },
-    {
-      id: 3,
-      name: 'Spark Plugs',
-      category: 'Engine Parts',
-      price: 8.99,
-      rating: 4.6,
-      image: '/api/placeholder/240/160',
-      description: 'Premium spark plugs for improved fuel efficiency'
-    },
-    {
-      id: 4,
-      name: 'Shock Absorber',
-      category: 'Suspension',
-      price: 89.99,
-      rating: 4.8,
-      image: '/api/placeholder/240/160',
-      description: 'Heavy-duty shock absorber for a smooth ride'
-    },
-    {
-      id: 5,
-      name: 'Alternator',
-      category: 'Electrical',
-      price: 129.99,
-      rating: 4.4,
-      image: '/api/placeholder/240/160',
-      description: 'High-output alternator for various vehicle applications'
-    },
-    {
-      id: 6,
-      name: 'Engine Oil (5L)',
-      category: 'Oils & Fluids',
-      price: 32.99,
-      rating: 4.9,
-      image: '/api/placeholder/240/160',
-      description: 'Synthetic engine oil for optimal engine protection'
-    },
-    {
-      id: 7,
-      name: 'Air Filter',
-      category: 'Engine Parts',
-      price: 15.99,
-      rating: 4.3,
-      image: '/api/placeholder/240/160',
-      description: 'Performance air filter for better airflow'
-    },
-    {
-      id: 8,
-      name: 'Brake Fluid (1L)',
-      category: 'Brake System',
-      price: 11.99,
-      rating: 4.6,
-      image: '/api/placeholder/240/160',
-      description: 'DOT 4 brake fluid for hydraulic brake systems'
-    },
-  ];
+  // Fetch products from the backend with pagination and filters
+  const fetchProducts = async (page = 1) => {
+    setLoading(true);
+    console.log(`Fetching page ${page} with limit ${limit}`);
+    try {
+      // Build base query parameters
+      const params = {
+        page,
+        limit,
+      };
 
-  const filteredProducts = activeCategory === 'All' 
-    ? products 
-    : products.filter(product => product.category === activeCategory);
+      // Add category filter if not "All"
+      if (activeCategory !== "All") {
+        params.category = activeCategory;
+      }
 
-  const addToCart = (product) => {
-    setCart([...cart, product]);
-    Swal.fire({
-      title: 'Added to Cart!',
-      text: `${product.name} has been added to your cart.`,
-      icon: 'success',
-      confirmButtonColor: '#dc2626',
-      timer: 1500
-    });
+      // Add price range filter
+      if (priceRange) {
+        params.maxPrice = priceRange;
+      }
+
+      // Construct the URL with URLSearchParams
+      const url = new URL('http://localhost:5000/inventory/');
+      
+      // Add base params
+      Object.keys(params).forEach(key => 
+        url.searchParams.append(key, params[key])
+      );
+      
+      // Add manufacturer filters (multiple values)
+      selectedManufacturers.forEach(manufacturer => 
+        url.searchParams.append('manufacturer', manufacturer)
+      );
+      
+      // Add vehicle make filters (multiple values)
+      selectedMakes.forEach(make => 
+        url.searchParams.append('vehicleMake', make)
+      );
+
+      console.log("Fetching URL:", url.toString());
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Fetched inventory data:", result);
+
+      if (result.success) {
+        setProducts(result.data);
+        setTotalItems(result.pagination.total);
+        setTotalPages(result.pagination.pages);
+        
+        // First-time data setup - extract manufacturers and makes
+        if (manufacturers.length === 0) {
+          // Extract unique manufacturers
+          const uniqueManufacturers = [...new Set(result.data.map(item => item.manufacturer))];
+          setManufacturers(uniqueManufacturers);
+
+          // Extract unique compatible vehicle makes if applicable
+          if (result.data.length > 0 && result.data[0].compatibleVehicles) {
+            const allMakes = result.data.flatMap(item =>
+              item.compatibleVehicles.map(vehicle => vehicle.make)
+            );
+            const uniqueMakes = [...new Set(allMakes)];
+            setCompatibleMakes(uniqueMakes);
+          }
+        }
+      } else {
+        throw new Error(result.message || "Failed to fetch inventory");
+      }
+    } catch (err) {
+      console.error("Error fetching inventory:", err);
+      setError("Failed to load products. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const buyNow = (product) => {
-    Swal.fire({
-      title: 'Proceed to Checkout?',
-      text: `You are about to purchase ${product.name} for $${product.price}`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#dc2626',
-      cancelButtonColor: '#4b5563',
-      confirmButtonText: 'Yes, Buy Now!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: 'Order Placed!',
-          text: 'Your order has been placed successfully.',
-          icon: 'success',
-          confirmButtonColor: '#dc2626',
-          timer: 2000
-        });
+  // Initial fetch
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Fetch when page or filters change
+  useEffect(() => {
+    fetchProducts(currentPage);
+  }, [currentPage, activeCategory, selectedManufacturers, priceRange, selectedMakes, limit]);
+
+  // Handle category change
+  const handleCategoryChange = (category) => {
+    setActiveCategory(category);
+    setCurrentPage(1); // Reset to first page when category changes
+  };
+
+  // Handle price range change
+  const handlePriceRangeChange = (value) => {
+    setPriceRange(Number(value));
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  // Handle manufacturer checkbox changes
+  const handleManufacturerChange = (manufacturer) => {
+    setSelectedManufacturers((prev) => {
+      if (prev.includes(manufacturer)) {
+        return prev.filter((m) => m !== manufacturer);
+      } else {
+        return [...prev, manufacturer];
       }
     });
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
-  // Function to render star ratings
-  const renderRating = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<span key={`full-${i}`} className="text-yellow-500">★</span>);
-    }
-    
-    if (hasHalfStar) {
-      stars.push(<span key="half" className="text-yellow-500">★</span>);
-    }
-    
-    const emptyStars = 5 - stars.length;
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<span key={`empty-${i}`} className="text-gray-300">★</span>);
-    }
-    
-    return stars;
+  // Handle vehicle make checkbox changes
+  const handleMakeChange = (make) => {
+    setSelectedMakes((prev) => {
+      if (prev.includes(make)) {
+        return prev.filter((m) => m !== make);
+      } else {
+        return [...prev, make];
+      }
+    });
+    setCurrentPage(1); // Reset to first page when filter changes
   };
+
+  // Handle change in items per page
+  const handleLimitChange = (e) => {
+    setLimit(parseInt(e.target.value));
+    setCurrentPage(1); // Reset to first page when limit changes
+  };
+
+  // Change page - this triggers a new fetch with the updated page number
+  const paginate = (pageNumber) => {
+    console.log(`Navigating to page ${pageNumber}`);
+    setCurrentPage(pageNumber);
+  };
+
+  // Enhanced buyNow function with checkout form
+  const buyNow = async (product) => {
+    // Calculate delivery date (default to 3 days from now)
+    const deliveryDate = new Date();
+    deliveryDate.setDate(deliveryDate.getDate() + 3);
+    
+    // Format date for the input field (YYYY-MM-DD)
+    const formattedDate = deliveryDate.toISOString().split('T')[0];
+    
+    // Show a form to collect delivery and payment information
+    const { value: formValues, isConfirmed } = await Swal.fire({
+      title: 'Complete Your Purchase',
+      html: `
+        <div class="text-left">
+          <h3 class="text-lg font-semibold mb-2">Product: ${product.name}</h3>
+          <p class="mb-4">Price: $${product.price}</p>
+          
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+            <input id="street" class="swal2-input" placeholder="Street Address" required>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+              <input id="city" class="swal2-input" placeholder="City" required>
+              <input id="state" class="swal2-input" placeholder="State" required>
+            </div>
+            <input id="zipCode" class="swal2-input mt-2" placeholder="Zip Code" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Date</label>
+            <input id="deliveryDate" type="date" class="swal2-input" value="${formattedDate}" min="${formattedDate}" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Time Slot</label>
+            <select id="timeSlot" class="swal2-input" required>
+              <option value="9:00-12:00">Morning (9:00 AM - 12:00 PM)</option>
+              <option value="12:00-15:00">Afternoon (12:00 PM - 3:00 PM)</option>
+              <option value="15:00-18:00">Evening (3:00 PM - 6:00 PM)</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+            <select id="paymentMethod" class="swal2-input" required>
+              <option value="credit-card">Credit Card</option>
+              <option value="debit-card">Debit Card</option>
+              <option value="upi">UPI</option>
+              <option value="net-banking">Net Banking</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes (Optional)</label>
+            <textarea id="notes" class="swal2-textarea" placeholder="Any special instructions?"></textarea>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Place Order',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#4b5563',
+      focusConfirm: false,
+      preConfirm: () => {
+        // Validate required fields
+        const street = document.getElementById('street').value;
+        const city = document.getElementById('city').value;
+        const state = document.getElementById('state').value;
+        const zipCode = document.getElementById('zipCode').value;
+        const selectedDate = document.getElementById('deliveryDate').value;
+        
+        if (!street || !city || !state || !zipCode || !selectedDate) {
+          Swal.showValidationMessage('Please fill all required fields');
+          return false;
+        }
+        
+        // Return form values
+        return {
+          deliveryAddress: {
+            street: document.getElementById('street').value,
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value,
+            zipCode: document.getElementById('zipCode').value,
+          },
+          deliveryDate: document.getElementById('deliveryDate').value,
+          deliveryTimeSlot: document.getElementById('timeSlot').value,
+          paymentMethod: document.getElementById('paymentMethod').value,
+          notes: document.getElementById('notes').value,
+        }
+      }
+    });
+
+    if (isConfirmed) {
+      try {
+        // Get userId from localStorage
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          throw new Error('User not logged in');
+        }
+        
+        // Parse the time slot into start and end times
+        const [start, end] = formValues.deliveryTimeSlot.split('-');
+        
+        // Prepare order data according to the schema
+        const orderData = {
+          user: userId,
+          items: [{
+            itemId: product._id,
+            name: product.name,
+            quantity: 1,
+            price: product.price
+          }],
+          totalAmount: product.price,
+          deliveryAddress: {
+            ...formValues.deliveryAddress,
+            // You could integrate with a geocoding API here to get coordinates
+            coordinates: {
+              lat: null,
+              lng: null
+            }
+          },
+          paymentMethod: formValues.paymentMethod,
+          deliveryDate: new Date(formValues.deliveryDate),
+          deliveryTimeSlot: {
+            start,
+            end
+          },
+          notes: formValues.notes
+        };
+
+        console.log("Sending order data:", orderData);
+        
+        // Send purchase request to backend
+        const response = await fetch('http://localhost:5000/orders/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming you store JWT token
+          },
+          body: JSON.stringify(orderData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Purchase failed');
+        }
+        
+        const result = await response.json();
+        
+        // Show success message
+        Swal.fire({
+          title: "Order Placed Successfully!",
+          text: `Order #${result._id} has been confirmed. You will receive a confirmation email shortly.`,
+          icon: "success",
+          confirmButtonColor: "#dc2626",
+        });
+      } catch (error) {
+        console.error("Order placement error:", error);
+        
+        Swal.fire({
+          title: "Error",
+          text: error.message || "Failed to place your order. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#dc2626",
+        });
+      }
+    }
+  };
+
+  if (loading && products.length === 0) return <LoadingSpinner />;
+  if (error) return <ErrorDisplay error={error} />;
 
   return (
-    <div className="min-h-screen bg-gray-100 my-32">
+    <div className="min-h-screen bg-gray-100">
+      {/* Mobile filter toggle button */}
+      <div className="fixed bottom-4 right-4 md:hidden z-20">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Filter size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile filters menu */}
+      <MobileFilterMenu
+        isOpen={mobileMenuOpen}
+        setIsOpen={setMobileMenuOpen}
+        categories={categories}
+        activeCategory={activeCategory}
+        setActiveCategory={handleCategoryChange}
+        priceRange={priceRange}
+        setPriceRange={handlePriceRangeChange}
+        manufacturers={manufacturers}
+        selectedManufacturers={selectedManufacturers}
+        handleManufacturerChange={handleManufacturerChange}
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Hero Banner */}
-        <div className="bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg shadow-lg mb-8 overflow-hidden relative">
-          <div className="md:flex items-center">
-            <div className="p-6 md:w-1/2">
-              <h2 className="text-3xl font-bold mb-4">Spring Sale: 25% OFF All Brake Components</h2>
-              <p className="mb-6">Upgrade your vehicle's braking system with our premium parts and enjoy safer drives!</p>
-              <button className="bg-white text-red-600 font-bold py-2 px-6 rounded-lg hover:bg-gray-100 transition">
-                Shop Now
-              </button>
-            </div>
-            <div className="md:w-1/2 h-64 bg-gray-300">
-              <img src="/bg-car.jpg" alt="Brake components on sale" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
+        <Header />
 
         {/* Categories and Products */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar */}
-          <div className="md:w-1/4 bg-white p-4 rounded-lg shadow-md h-fit hidden md:block">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Categories</h3>
-            <ul className="space-y-2">
-              {categories.map(category => (
-                <li key={category}>
-                  <button 
-                    className={`flex items-center w-full text-left px-2 py-2 rounded-md transition ${activeCategory === category ? 'bg-red-100 text-red-600' : 'hover:bg-gray-100'}`}
-                    onClick={() => setActiveCategory(category)}
-                  >
-                    <ChevronRight size={16} className={`mr-2 ${activeCategory === category ? 'text-red-600' : 'text-gray-400'}`} />
-                    {category}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            
-            <div className="mt-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Filters</h3>
-              
-              <div className="border-t pt-4">
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center justify-between">
-                  Price Range
-                  <ChevronDown size={16} className="text-gray-400" />
-                </h4>
-                <div className="flex items-center space-x-4 mb-4">
-                  <input type="range" className="w-full accent-red-600" min="0" max="200" step="10" />
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>$0</span>
-                  <span>$200</span>
-                </div>
-              </div>
-              
-              <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center justify-between">
-                  Brands
-                  <ChevronDown size={16} className="text-gray-400" />
-                </h4>
-                <div className="space-y-2">
-                  {['Bosch', 'ACDelco', 'Denso', 'Valeo', 'NGK'].map(brand => (
-                    <label key={brand} className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded text-red-600 focus:ring-red-500" />
-                      <span>{brand}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center justify-between">
-                  Compatibility
-                  <ChevronDown size={16} className="text-gray-400" />
-                </h4>
-                <div className="space-y-2">
-                  {['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes'].map(make => (
-                    <label key={make} className="flex items-center space-x-2">
-                      <input type="checkbox" className="rounded text-red-600 focus:ring-red-500" />
-                      <span>{make}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <button className="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition flex items-center justify-center">
-                <Filter size={16} className="mr-2" />
-                Apply Filters
-              </button>
-            </div>
-          </div>
-          
+          <Sidebar
+            categories={categories}
+            activeCategory={activeCategory}
+            setActiveCategory={handleCategoryChange}
+            priceRange={priceRange}
+            setPriceRange={handlePriceRangeChange}
+            manufacturers={manufacturers}
+            selectedManufacturers={selectedManufacturers}
+            handleManufacturerChange={handleManufacturerChange}
+          />
+
           {/* Products Grid */}
           <div className="md:w-3/4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {activeCategory === 'All' ? 'All Products' : activeCategory}
-              </h2>
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-600 text-sm hidden md:inline">
-                  Showing {filteredProducts.length} results
-                </span>
-                <select className="bg-white border rounded-md px-2 py-1 text-sm text-gray-700 focus:ring-red-500 focus:border-red-500">
-                  <option>Sort by: Featured</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                  <option>Rating: High to Low</option>
+            {/* Results summary & Items per page selector */}
+            <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <div className="mb-2 sm:mb-0">
+                <p className="text-gray-700">
+                  {loading ? (
+                    'Loading products...'
+                  ) : products.length > 0 ? (
+                    `Showing ${(currentPage - 1) * limit + 1}-${Math.min((currentPage - 1) * limit + products.length, totalItems)} of ${totalItems} products`
+                  ) : (
+                    'No products found matching your criteria'
+                  )}
+                </p>
+              </div>
+              
+              <div className="flex items-center">
+                <label htmlFor="limit-select" className="mr-2 text-sm text-gray-600">Items per page:</label>
+                <select
+                  id="limit-select"
+                  value={limit}
+                  onChange={handleLimitChange}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
                 </select>
               </div>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map(product => (
-                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-                  <div className="h-40 bg-gray-200 relative">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                    <button className="absolute top-2 right-2 bg-white p-1 rounded-full shadow hover:bg-gray-100">
-                      <Heart size={18} className="text-gray-400 hover:text-red-500" />
-                    </button>
-                  </div>
-                  
-                  <div className="p-4">
-                    <span className="text-xs font-semibold text-red-600 bg-red-100 rounded-full px-2 py-1">{product.category}</span>
-                    <h3 className="font-bold text-lg mt-2 text-gray-800">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mt-1">{product.description}</p>
-                    
-                    <div className="flex items-center mt-2">
-                      <div className="flex">{renderRating(product.rating)}</div>
-                      <span className="text-xs text-gray-500 ml-1">({product.rating})</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center mt-4">
-                      <span className="font-bold text-xl text-gray-800">${product.price}</span>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => addToCart(product)}
-                          className="bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition"
-                        >
-                          <ShoppingCart size={18} />
-                        </button>
-                        <button 
-                          onClick={() => buyNow(product)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition text-sm font-semibold"
-                        >
-                          Buy Now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Pagination */}
-            <div className="mt-8 flex justify-center">
-              <div className="flex items-center space-x-1">
-                <button className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">&laquo;</button>
-                <button className="px-3 py-1 rounded-md bg-red-600 text-white">1</button>
-                <button className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">2</button>
-                <button className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">3</button>
-                <button className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition">&raquo;</button>
+
+            {loading && products.length === 0 ? (
+              <div className="flex justify-center py-8">
+                <LoadingSpinner />
               </div>
-            </div>
+            ) : products.length > 0 ? (
+              <ProductList 
+                products={products} 
+                buyNow={buyNow} 
+              />
+            ) : (
+              <div className="bg-white p-8 rounded-lg shadow text-center">
+                <p className="text-gray-500">No products found matching your criteria.</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                paginate={paginate}
+              />
+            )}
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-8 mt-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-xl font-bold mb-4">AutoParts Hub</h3>
-              <p className="text-gray-400">Your one-stop solution for all vehicle spare parts. Quality products at competitive prices.</p>
-            </div>
-            
-            <div>
-              <h4 className="font-bold mb-4">Quick Links</h4>
-              <ul className="space-y-2">
-                {['Home', 'Shop', 'About Us', 'Contact', 'Blog'].map(link => (
-                  <li key={link}>
-                    <a href="#" className="text-gray-400 hover:text-white transition">{link}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-bold mb-4">Customer Support</h4>
-              <ul className="space-y-2">
-                {['FAQ', 'Shipping Policy', 'Returns & Refunds', 'Track Order', 'Privacy Policy'].map(link => (
-                  <li key={link}>
-                    <a href="#" className="text-gray-400 hover:text-white transition">{link}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-bold mb-4">Subscribe to Newsletter</h4>
-              <div className="flex">
-                <input 
-                  type="email" 
-                  placeholder="Your email address" 
-                  className="px-4 py-2 rounded-l-lg text-gray-800 w-full focus:outline-none"
-                />
-                <button className="bg-red-600 text-white px-4 py-2 rounded-r-lg hover:bg-red-700 transition">
-                  Subscribe
-                </button>
-              </div>
-              <div className="mt-4 flex space-x-4">
-                {['Facebook', 'Twitter', 'Instagram', 'YouTube'].map(social => (
-                  <a key={social} href="#" className="text-gray-400 hover:text-white transition">
-                    {social[0]}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-700 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400">&copy; 2025 AutoParts Hub. All rights reserved.</p>
-            <div className="flex space-x-4 mt-4 md:mt-0">
-              <img src="/api/placeholder/40/25" alt="Visa" className="h-6" />
-              <img src="/api/placeholder/40/25" alt="Mastercard" className="h-6" />
-              <img src="/api/placeholder/40/25" alt="PayPal" className="h-6" />
-              <img src="/api/placeholder/40/25" alt="Apple Pay" className="h-6" />
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import AdminHome from "./pages/admin/home";
 import Notifications from "./pages/admin/notifications";
 import UserSignUp from "./pages/auth/user/userSignUp";
 import PoSignUp from "./pages/auth/petrol-owner/poSignUp";
+import Store from "./pages/admin/Store";
 
 const PrivateRoute = ({ children }) => {
   const { userInfo } = useAppStore();
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="/user/fuel" element={<FuelDeliverySystem />}></Route>
           <Route path="/user/profile" element={<UserProfile />}></Route>
           <Route path="/admin" element={<AdminHome />}></Route>
+          <Route path="/admin/store" element={<Store />}></ Route>
           <Route path="/admin/notifications" element={<Notifications />}></Route>
         </Routes>
       </BrowserRouter>

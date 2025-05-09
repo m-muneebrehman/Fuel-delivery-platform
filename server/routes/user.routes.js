@@ -17,7 +17,8 @@ router.post('/login',[
 ],
 userController.loginUser)
 
-router.get('/profile',authMiddleware.authUser,userController.getUserProfile);
+router.get('/profile', userController.getUserProfile);
+router.put('/profile/updateProfile', userController.updateProfile);
 
 router.get('/logout',authMiddleware.authUser,userController.logoutUser);
 

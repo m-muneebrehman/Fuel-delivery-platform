@@ -12,21 +12,27 @@ module.exports.registerFuelPump = async (req, res, next) => {
 
     const { name, email, password, location } = req.body;
 
+    console.log('location', location);
+
     const isFuelPumpExist = await fuelPumpModel.findOne({ email });
     if(isFuelPumpExist) {
         return res.status(400).json({ message: "Fuel pump already exists" });
     }
 
+    console.log('It was fine here');
+
    
     // Get coordinates from Google Maps API
-    const location_detail = await mapsService.getAddressCoordinate(location);
+    // const location_detail = await mapsService.getAddressCoordinate(location);
+
+    console.log('The issue is here');
 
     // Format location object according to schema
-    const locationData = {
-        type: 'Point',
-        coordinates: [location_detail.lng, location_detail.lat], // MongoDB expects [longitude, latitude]
-        address: location
-    };
+    // const locationData = {
+    //     type: 'Point',
+    //     coordinates: [location_detail.lng, location_detail.lat], // MongoDB expects [longitude, latitude]
+    //     address: location
+    // };
 
     const hashedPassword = await fuelPumpModel.hashPassword(password);
 
@@ -34,12 +40,12 @@ module.exports.registerFuelPump = async (req, res, next) => {
         name, 
         email, 
         password: hashedPassword, 
-        location : locationData
+        location : location
     });
 
-    const token = fuelPump.generateAuthToken();
+    // const token = fuelPump.generateAuthToken();
 
-    res.status(201).json({ token, fuelPump });
+    res.status(201).json({ fuelPump, fuelPumpId: fuelPump._id });
 }
 
 
@@ -57,16 +63,20 @@ module.exports.loginFuelPump = async (req, res, next) => {
         return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    if(fuelPump.isVerified === false) {
+        return res.status(200).json({ verified: fuelPump.isVerified });
+    }
+
     const isMatch = await fuelPump.comparePassword(password);
 
     if(!isMatch) {
         return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = fuelPump.generateAuthToken();
-    res.cookie("token", token);
+    // const token = fuelPump.generateAuthToken();
+    // res.cookie("token", token);
 
-    res.status(200).json({ token, fuelPump });
+    res.status(200).json({ fuelPump });
     
     
 }

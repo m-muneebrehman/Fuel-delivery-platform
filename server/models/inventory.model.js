@@ -41,7 +41,7 @@ const inventorySchema = new mongoose.Schema(
     }],
     images: [{
       type: String,
-      required: true
+      required: false
     }],
     specifications: {
       type: Map,

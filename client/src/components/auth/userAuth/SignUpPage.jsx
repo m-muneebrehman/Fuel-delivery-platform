@@ -78,11 +78,10 @@ const SignUpPage = () => {
         throw new Error(data.message || "Registration failed");
       }
 
-      // Store user data or token (if your API returns it)
-      sessionStorage.setItem("token", data.token);
-      sessionStorage.setItem("user", JSON.stringify(data.user));
+      const userId = data.userId;
 
-      // Redirect to dashboard or login page
+      console.log("ID", userId);
+      localStorage.setItem("userId", userId);
       navigate("/user/dashboard");
     } catch (err) {
       setError(err.message || "An error occurred during registration");
