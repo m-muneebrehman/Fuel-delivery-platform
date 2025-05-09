@@ -28,5 +28,5 @@ export const Logo = () => {
         <span className="text-3xl font-semibold">EV Vehicle</span>
       </div>
     );
-  };
+  }
   

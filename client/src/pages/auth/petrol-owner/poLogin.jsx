@@ -1,5 +1,5 @@
 import React from 'react'
-import PetrolOwnerLoginPage from '@/components/auth/poAuth/LoginPage';
+import PetrolOwnerLoginPage from '@/components/auth/poAuth/LoginPage'
 
 function PoAuth() {
   return (

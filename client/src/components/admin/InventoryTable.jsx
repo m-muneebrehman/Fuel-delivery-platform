@@ -1,6 +1,6 @@
 // components/InventoryTable.jsx
 import React from 'react';
-import { Edit, Trash2, Inbox } from 'lucide-react';
+import { Edit, Trash2, Inbox } from 'lucide-react'
 import { Button } from "@/components/ui/button";
 
 const InventoryTable = ({ inventory, onEdit, onDelete, loading }) => {

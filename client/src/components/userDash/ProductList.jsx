@@ -1,6 +1,6 @@
 // File: components/ProductList.jsx
 import React from 'react';
-import ProductCard from './ProductCard';
+import ProductCard from './ProductCard'
 
 export default function ProductList({ products, buyNow }) {
   // Function to render availability status based on quantity

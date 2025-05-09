@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const inventoryModel = require("../models/inventory.model.js"); // Adjust path if needed
 
 // Replace this with your MongoDB connection string
-const MONGO_URI = "mongodb://localhost:27017/fuel-delivery";
+const MONGO_URI = "mongodb://localhost:27017/fuel-delivery"
 
 mongoose
   .connect(MONGO_URI, {

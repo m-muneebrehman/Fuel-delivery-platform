@@ -21,4 +21,4 @@ const ProgressIndicator = ({ currentStep }) => {
   );
 };
 
-export default ProgressIndicator;
+export default ProgressIndicator

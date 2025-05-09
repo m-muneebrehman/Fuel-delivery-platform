@@ -1,5 +1,5 @@
 // File: components/MobileFilterMenu.jsx
-import React from 'react';
+import React from 'react'
 import { ChevronRight, X, Filter } from 'lucide-react';
 
 export default function MobileFilterMenu({

@@ -95,7 +95,7 @@ export default function SparePartsStore() {
       }
 
       const result = await response.json();
-      console.log("Fetched inventory data:", result);
+      console.log("Fetched inventory data:", result)
 
       if (result.success) {
         setProducts(result.data);

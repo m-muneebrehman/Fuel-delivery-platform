@@ -79,7 +79,7 @@ export default function UserProfile() {
     setIsLoading(true);
 
     try {
-      const userId = localStorage.getItem("userId");
+      const userId = localStorage.getItem("userId")
       
       if (!userId) {
         throw new Error("No user ID found");

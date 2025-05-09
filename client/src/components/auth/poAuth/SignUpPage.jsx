@@ -5,7 +5,7 @@ import Step1Form from "./Step1Form";
 import Step2Form from "./Step2Form";
 import ProgressIndicator from "./ProgressIndicator";
 import SidePanel from "./SidePanel";
-import Swal from "sweetalert2";
+import Swal from "sweetalert2"
 
 const PetrolOwnerSignupPage = () => {
   const navigate = useNavigate();

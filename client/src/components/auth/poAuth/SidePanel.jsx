@@ -32,4 +32,4 @@ const SidePanel = () => {
   );
 };
 
-export default SidePanel;
+export default SidePanel

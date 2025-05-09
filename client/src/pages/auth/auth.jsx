@@ -1,5 +1,5 @@
 import AuthBody from "@/components/auth/body";
-import { Navbar } from "@/components/auth/navbar";
+import { Navbar } from "@/components/auth/navbar"
 
 const Auth = () => {
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import AdminStore from '@/components/admin/AdminStore';
+import AdminStore from '@/components/admin/AdminStore'
 
 function Store() {
   return (

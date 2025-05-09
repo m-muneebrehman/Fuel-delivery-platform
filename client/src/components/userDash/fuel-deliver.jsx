@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import { Truck, MapPin, Clock, Calendar, ChevronLeft, ChevronRight, Fuel, CreditCard, Navigation, Check, X, Home, Menu } from 'lucide-react';
 
 export default function FuelDeliverySystem() {

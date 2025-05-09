@@ -1,7 +1,7 @@
 import { ShoppingBag, Package, Filter, Clock } from 'lucide-react';
 import { Navbar } from '@/components/poDash/Navbar';
 import Products from '@/components/poDash/Products';
-import Orders from '@/components/poDash/Orders';
+import Orders from '@/components/poDash/Orders'
 
 export default function OrdersProductsPage() {
 

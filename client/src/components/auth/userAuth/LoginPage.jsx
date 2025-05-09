@@ -22,7 +22,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
       // Make API call to your backend authentication endpoint

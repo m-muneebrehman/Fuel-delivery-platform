@@ -1,5 +1,5 @@
 // components/Step1Form.jsx
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 
 const Step1Form = ({ formData, handleChange, nextStep }) => {
   return (

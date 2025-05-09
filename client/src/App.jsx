@@ -15,7 +15,7 @@ import AdminHome from "./pages/admin/home";
 import Notifications from "./pages/admin/notifications";
 import UserSignUp from "./pages/auth/user/userSignUp";
 import PoSignUp from "./pages/auth/petrol-owner/poSignUp";
-import Store from "./pages/admin/Store";
+import Store from "./pages/admin/Store"
 
 const PrivateRoute = ({ children }) => {
   const { userInfo } = useAppStore();

@@ -1,7 +1,7 @@
 // File: routes/orderRoutes.js
 const express = require('express');
 const router = express.Router();
-const orderController = require('../controllers/order.controller.js');
+const orderController = require('../controllers/order.controller.js')
 
 // Create a new order
 router.post('/', orderController.createOrder);

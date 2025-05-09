@@ -1,6 +1,6 @@
 // components/InventoryForm.jsx
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Save } from 'lucide-react';
+import { X, Plus, Trash2, Save } from 'lucide-react'
 import { Button } from "@/components/ui/button";
 
 const InventoryForm = ({ onSubmit, onCancel, initialData, isEditing }) => {

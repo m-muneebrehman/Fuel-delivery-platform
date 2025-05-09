@@ -1,6 +1,6 @@
 // File: components/Sidebar.jsx
 import React from 'react';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react'
 
 export default function Sidebar({
   categories,

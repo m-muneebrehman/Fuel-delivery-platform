@@ -1,7 +1,7 @@
 // routes/inventory.routes.js
 const express = require('express');
 const router = express.Router();
-const inventoryController = require('../controllers/inventory.controller');
+const inventoryController = require('../controllers/inventory.controller')
 
 router.post('/createItem', 
   inventoryController.createInventoryItem

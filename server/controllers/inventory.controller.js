@@ -1,5 +1,5 @@
 // controllers/inventory.controller.js
-const inventoryService = require("../services/inventory.service");
+const inventoryService = require("../services/inventory.service")
 
 /**
  * Controller for handling inventory-related HTTP requests

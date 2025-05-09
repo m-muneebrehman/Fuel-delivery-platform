@@ -1,5 +1,5 @@
 // File: controllers/orderController.js
-const Order = require('../models/order.model.js');
+const Order = require('../models/order.model.js')
 const Inventory = require('../models/inventory.model.js'); // Assuming you have an Inventory model
 
 // Helper function to validate order data

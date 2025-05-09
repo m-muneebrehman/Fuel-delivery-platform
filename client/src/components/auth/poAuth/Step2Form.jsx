@@ -1,5 +1,5 @@
 // components/Step2Form.jsx
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';

@@ -1,9 +1,9 @@
 // AdminStore.jsx
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, RefreshCw } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, Search, RefreshCw } from 'lucide-react'
 import { Button } from "@/components/ui/button";
-import InventoryTable from './InventoryTable';
+import InventoryTable from './InventoryTable'
 import InventoryForm from './InventoryForm';
 import InventoryFilters from './InventoryFilters';
 import InventoryStats from './InventoryStats';

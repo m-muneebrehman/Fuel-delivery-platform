@@ -696,5 +696,5 @@ export default function DeliveryBoyManagement() {
         </div>
       )}
     </div>
-  );
+  );;
 }

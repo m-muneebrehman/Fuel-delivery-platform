@@ -217,7 +217,7 @@ export default function OrdersPage() {
         const userId = localStorage.getItem("userId");
         
         if (!userId) {
-          setError("User not logged in");
+          setError("User not logged in")
           setLoading(false);
           return;
         }

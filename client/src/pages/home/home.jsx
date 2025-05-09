@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Navbar } from "@/components/Home/navbar";
 import { Hero } from "@/components/Home/hero";
-import { Feature } from "@/components/Home/feature";
+import { Feature } from "@/components/Home/feature"
 
 function Home() {
   // eslint-disable-next-line no-unused-vars

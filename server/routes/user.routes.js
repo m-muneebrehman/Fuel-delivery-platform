@@ -22,4 +22,4 @@ router.put('/profile/updateProfile', userController.updateProfile);
 
 router.get('/logout',authMiddleware.authUser,userController.logoutUser);
 
-module.exports= router;
+module.exports= router

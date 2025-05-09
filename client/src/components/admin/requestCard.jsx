@@ -1,5 +1,5 @@
 // Card component for requests
-import { MapPin, Check, X, Eye } from "lucide-react";
+import { MapPin, Check, X, Eye } from "lucide-react"
 
 const RequestCard = ({ request, onApprove, onReject, onView }) => {
   const formatDate = (dateString) => {

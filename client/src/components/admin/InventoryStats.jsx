@@ -1,6 +1,6 @@
 // components/InventoryStats.jsx
 import React from 'react';
-import { CircleDollarSign, ShoppingBag, AlertCircle, BarChart3 } from 'lucide-react';
+import { CircleDollarSign, ShoppingBag, AlertCircle, BarChart3 } from 'lucide-react'
 
 const InventoryStats = ({ inventory }) => {
   // Calculate statistics

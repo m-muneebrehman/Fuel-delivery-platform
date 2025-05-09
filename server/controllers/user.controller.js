@@ -89,7 +89,7 @@ module.exports.getUserProfile = async (req, res, next) => {
 
 module.exports.updateProfile = async (req, res, next) => {
   try {
-    const { userId, userName, phoneNumber } = req.body;
+    const { userId, userName, phoneNumber } = req.body
 
     if (!userId || !userName || !phoneNumber) {
       return res.status(400).json({ message: "Missing required fields" });

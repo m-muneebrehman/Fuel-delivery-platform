@@ -2,7 +2,7 @@ const fuelPumpService = require("../services/fuelPump.service");
 const { validationResult ,cookie} = require("express-validator");
 const fuelPumpModel = require("../models/fuelPump.model");
 const blacklistTokenModel = require("../models/blacklistToken.model");
-const mapsService = require("../services/maps.service");
+const mapsService = require("../services/maps.service")
 
 module.exports.registerFuelPump = async (req, res, next) => {
     const errors = validationResult(req);

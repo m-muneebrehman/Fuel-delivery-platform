@@ -4,7 +4,7 @@ import React from 'react';
 export default function Pagination({ currentPage, totalPages, paginate }) {
   // Don't render pagination if there's only one page or no pages
   if (totalPages <= 1) {
-    return null;
+    return null
   }
   
   // Generate pagination numbers
