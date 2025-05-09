@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const PetrolOwnerLoginPage = () => {
   const navigate = useNavigate();
@@ -26,23 +27,12 @@ const PetrolOwnerLoginPage = () => {
     setIsLoading(true);
 
     try {
-      // Make API call to your backend authentication endpoint
-      const response = await fetch("/api/petrol-owners/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/fuelpumps/login`, {
+        email: formData.email,
+        password: formData.password
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
+      const data = response.data;
 
       // Store user data or token in localStorage or sessionStorage based on remember me
       if (formData.rememberMe) {
@@ -56,7 +46,7 @@ const PetrolOwnerLoginPage = () => {
       // Redirect to dashboard on successful login
       navigate("/petrol-owner/dashboard");
     } catch (err) {
-      setError(err.message || "Invalid email or password. Please try again.");
+      setError(err.response?.data?.message || "Invalid email or password. Please try again.");
     } finally {
       setIsLoading(false);
     }
