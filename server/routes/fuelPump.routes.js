@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const authMiddleware = require('../middlewares/auth.middleware')
-const fuelPumpController = require('../controllers/fuelPump.controller');
+const fuelPumpController = require('../controllers/fuelPump.controller')
 
 
 router.post('/register', [

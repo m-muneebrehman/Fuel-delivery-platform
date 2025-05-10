@@ -1,4 +1,4 @@
-import { MoveRight } from "lucide-react";
+import { MoveRight } from "lucide-react"
 import { Button } from "@/components/ui/button";
 
 export const Hero = () => (

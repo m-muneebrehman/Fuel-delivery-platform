@@ -1,5 +1,5 @@
 import React from 'react'
-import LoginPage from '@/components/auth/userAuth/LoginPage';
+import LoginPage from '@/components/auth/userAuth/LoginPage'
 
 function UserAuth() {
   return (

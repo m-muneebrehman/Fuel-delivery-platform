@@ -224,7 +224,7 @@ export default function AdminHomePage() {
 
   // If not authenticated, show the authentication modal
   if (!isAuthenticated) {
-    return <AuthModal onLogin={handleLoginSuccess} />;
+    return <AuthModal onLogin={handleLoginSuccess} />
   }
   
   return (

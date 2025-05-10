@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button"
+import { useNavigate } from "react-router-dom"
+import Swal from "sweetalert2";
 import axios from "axios";
 
 const PetrolOwnerLoginPage = () => {
@@ -8,7 +9,6 @@ const PetrolOwnerLoginPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    rememberMe: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,7 +17,7 @@ const PetrolOwnerLoginPage = () => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -27,6 +27,7 @@ const PetrolOwnerLoginPage = () => {
     setIsLoading(true);
 
     try {
+
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/fuelpumps/login`, {
         email: formData.email,
         password: formData.password
@@ -34,17 +35,17 @@ const PetrolOwnerLoginPage = () => {
 
       const data = response.data;
 
-      // Store user data or token in localStorage or sessionStorage based on remember me
-      if (formData.rememberMe) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("petrolOwner", JSON.stringify(data.petrolOwner));
+      if (data.verified === false) {
+        Swal.fire({
+          icon: "info",
+          title: "Pending Verification",
+          text: "Your account has been created but is yet to be verified. Please wait for approval.",
+          confirmButtonColor: "#28a745",
+        });
       } else {
-        sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("petrolOwner", JSON.stringify(data.petrolOwner));
+        localStorage.setItem("ownerId", data.ownerId); // Store token in local storage
+        navigate("/petrol-owner/dashboard");
       }
-
-      // Redirect to dashboard on successful login
-      navigate("/petrol-owner/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password. Please try again.");
     } finally {
@@ -139,17 +140,7 @@ const PetrolOwnerLoginPage = () => {
             </Button>
 
             <div className="flex justify-between items-center mt-4">
-              <label className="flex items-center text-sm text-gray-600">
-                <input 
-                  type="checkbox" 
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
-                  className="h-4 w-4" 
-                />
-                <span className="ml-2">Remember me</span>
-              </label>
-              <button 
+              <button
                 type="button"
                 onClick={handleForgotPassword}
                 className="text-blue-500 text-sm"
@@ -168,7 +159,7 @@ const PetrolOwnerLoginPage = () => {
             <div className="text-center">
               <p className="text-gray-600">
                 Don't have an account?{" "}
-                <button 
+                <button
                   type="button"
                   onClick={handleSignup}
                   className="text-blue-500 font-medium"

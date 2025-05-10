@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { MapPin, Users, Check, X, ChevronDown, Eye, ArrowLeft, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom'; // Assuming you're using React Router
 import RequestCard from './requestCard'; // Import your RequestCard component
-import RequestDetailsModal from './detailModal'; // Import your RequestDetailsModal component
+import RequestDetailsModal from './detailModal' // Import your RequestDetailsModal component
 
 // Dummy data for requests
 const dummyRequests = [

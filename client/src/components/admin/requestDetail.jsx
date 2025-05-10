@@ -1,6 +1,6 @@
 // Request details modal
 const RequestDetailsModal = ({ request, onClose, onApprove, onReject }) => {
-  if (!request) return null;
+  if (!request) return null
   
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, {

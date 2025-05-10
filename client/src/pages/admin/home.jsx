@@ -1,5 +1,5 @@
 import React from 'react'
-import AdminHomePage from '@/components/admin/dashboard';
+import AdminHomePage from '@/components/admin/dashboard'
 
 function AdminHome() {
   return (

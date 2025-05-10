@@ -7,7 +7,6 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    rememberMe: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,7 +22,7 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
       // Make API call to your backend authentication endpoint
@@ -43,35 +42,12 @@ const LoginPage = () => {
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
-      
-      console.log("Token received:", data.token);
-      
-      // Ensure token is a string and not undefined/null before storing
-      if (!data.token) {
-        throw new Error("No token received from server");
-      }
 
-      // Store user data or token in localStorage or sessionStorage based on remember me
-      if (formData.rememberMe) {
-        localStorage.setItem("token", data.token);
-        if (data.user) {
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-      } else {
-        sessionStorage.setItem("token", data.token);
-        if (data.user) {
-          sessionStorage.setItem("user", JSON.stringify(data.user));
-        }
-      }
+      const userId = data.userId;
 
-      // Verify storage was successful
-      const storedToken = formData.rememberMe 
-        ? localStorage.getItem("token") 
-        : sessionStorage.getItem("token");
-        
-      console.log("Token stored successfully:", storedToken);
+      console.log('ID', userId);
+      localStorage.setItem('userId', userId);
 
-      // Redirect to dashboard on successful login
       navigate("/user/dashboard");
     } catch (err) {
       console.error("Login error:", err);
@@ -168,16 +144,6 @@ const LoginPage = () => {
             </Button>
 
             <div className="flex justify-between items-center mt-4">
-              <label className="flex items-center text-sm text-gray-600">
-                <input 
-                  type="checkbox" 
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onChange={handleChange}
-                  className="h-4 w-4" 
-                />
-                <span className="ml-2">Remember me</span>
-              </label>
               <button 
                 type="button"
                 onClick={handleForgotPassword}

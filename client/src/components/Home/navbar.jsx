@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -70,7 +70,7 @@ export const Navbar = () => {
               <Link
                 key={item.title}
                 to={item.href}
-                className="text-white text-md px-3 py-2 rounded-md hover:outline hover:outline-2 hover:outline-red-500 transition duration-200"
+                className="text-white text-md px-3 py-2 rounded-md hover:outline-2 hover:outline-red-500 transition duration-200"
               >
                 {item.title}
               </Link>

@@ -1,5 +1,5 @@
 // Card component for petrol pumps
-import { MapPin, Users } from "lucide-react";
+import { MapPin, Users } from "lucide-react"
 
 const PetrolPumpCard = ({ pump, onClick }) => {
   const timeAgo = (dateString) => {

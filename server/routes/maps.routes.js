@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const MapsService = require('../services/maps.service');
-const { authMiddleware } = require('../middlewares/auth.middleware');
+const { authMiddleware } = require('../middlewares/auth.middleware')
 
 // Calculate delivery fare
 router.post('/calculate-fare', authMiddleware, async (req, res) => {

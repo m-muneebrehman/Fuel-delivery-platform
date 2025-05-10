@@ -97,4 +97,4 @@ const DetailModal = ({ pump, onClose }) => {
   );
 };
 
-export default DetailModal;
+export default DetailModal
