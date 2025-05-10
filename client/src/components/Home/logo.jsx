@@ -25,7 +25,7 @@ export const Logo = () => {
             fill="#a16ee8"
           />
         </svg>
-        <span className="text-3xl font-semibold">EV Vehicle</span>
+        <span className="text-3xl font-semibold">Gear & Go</span>
       </div>
     );
   }

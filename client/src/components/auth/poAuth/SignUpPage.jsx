@@ -150,6 +150,7 @@ const PetrolOwnerSignupPage = () => {
     navigate("/auth/petrol-owner/login");
   };
 
+
   return (
     <div className="flex flex-col sm:flex-row w-screen h-auto sm:h-screen">
       {/* Left Side */}
