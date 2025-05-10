@@ -278,14 +278,20 @@ const PetrolOwnerSignupPage = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea
-                  name="location.address"
-                  value={formData.location.address}
-                  onChange={handleChange}
-                  placeholder="Full address of your fuel pump"
-                  className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md h-24"
-                  required
-                />
+                <select
+  name="location.address"
+  value={formData.location.address}
+  onChange={handleChange}
+  className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+  required
+>
+  <option value="">Select your fuel pump address</option>
+  <option value="123 Main Street, City A">123 Main Street, City A</option>
+  <option value="456 Market Road, City B">456 Market Road, City B</option>
+  <option value="789 Industrial Area, City C">789 Industrial Area, City C</option>
+  {/* Add more options as needed */}
+</select>
+
               </div>
               
               <div className="flex space-x-3">
