@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react"
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X, ShoppingBag, Fuel, Package, User } from "lucide-react"
 import { Logo } from "../Home/logo";
 
 export const Navbar = () => {
+  const location = useLocation();
+  
   const navigationItems = [
-    { title: "Store", href: "/user/store" },
-    { title: "Fuel Delievery", href: "/user/fuel" },
-    { title: "My Orders", href: "/user/orders" },
-    { title: "My Profile", href: "/user/profile" },
+    { title: "Store", href: "/user/store", icon: ShoppingBag },
+    { title: "Fuel Delivery", href: "/user/fuel", icon: Fuel },
+    { title: "My Orders", href: "/user/orders", icon: Package },
+    { title: "My Profile", href: "/user/profile", icon: User },
   ];
 
   const [isOpen, setOpen] = useState(false);
@@ -28,87 +30,96 @@ export const Navbar = () => {
 
   // Determine navbar style based on scroll position
   const getNavbarStyle = () => {
-    // Initial state
     if (scrollPosition < 50) {
       return {
-        height: "h-28",
-        background: "bg-gray-600 bg-opacity-95",
-        marginTop: "mt-8",
+        background: "bg-white/80 backdrop-blur-md",
+        shadow: "shadow-sm",
       };
-    }
-    // First scroll threshold
-    else if (scrollPosition < 150) {
+    } else {
       return {
-        height: "h-25",
-        background: "bg-gray-700 bg-opacity-95",
-        marginTop: "mt-4",
-      };
-    }
-    // Further scrolling
-    else {
-      return {
-        height: "h-22",
-        background: "bg-gray-800 bg-opacity-95",
-        marginTop: "mt-2",
+        background: "bg-white/95 backdrop-blur-md",
+        shadow: "shadow-md",
       };
     }
   };
 
-  const { height, background, marginTop } = getNavbarStyle();
+  const { background, shadow } = getNavbarStyle();
 
   return (
-    <header className="w-full z-40 fixed top-0 left-0 bg-transparent">
-      <div className={`mx-15 px-4 md:px-6 lg:px-8 ${marginTop} rounded-xl ${background} text-white shadow-lg transition-all duration-300 ease-in-out`}>
-        <div className={`flex items-center justify-between ${height} px-2 md:px-4 transition-all duration-300`}>
-          {/* Logo aligned flush to the left */}
-          <div className="flex items-center transition-all duration-300">
+    <header className={`w-full ${background} ${shadow} transition-all duration-300`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
             <Logo />
           </div>
 
-          {/* Navigation - right aligned */}
-          <nav className="hidden lg:flex items-center gap-4 ml-auto">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.title}
-                to={item.href}
-                className="bg-red-100 text-red-700 text-md px-3 py-2 rounded-md hover:outline-2 hover:outline-red-500 hover:bg-red-200 transition duration-200"
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-4">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                    isActive
+                      ? "bg-purple-100 text-purple-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
                 >
-                {item.title}
-              </Link>
-            ))}
+                  <Icon className="h-5 w-5 mr-2" />
+                  {item.title}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center">
+          <div className="lg:hidden">
             <button
               onClick={() => setOpen(!isOpen)}
-              aria-label="Toggle Menu"
-              className="focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500"
+              aria-expanded="false"
             >
+              <span className="sr-only">Open main menu</span>
               {isOpen ? (
-                <X className="w-6 h-6 text-white" />
+                <X className="block h-6 w-6" aria-hidden="true" />
               ) : (
-                <Menu className="w-6 h-6 text-white" />
+                <Menu className="block h-6 w-6" aria-hidden="true" />
               )}
             </button>
           </div>
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {isOpen && (
-          <div className="lg:hidden w-full px-4 py-4 space-y-3 rounded-b-xl border-t border-gray-700">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.title}
-                to={item.href}
-                className="block text-white text-md px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200"
-              >
-                {item.title}
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="lg:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className={`flex items-center px-4 py-3 rounded-lg text-base font-medium transition-colors duration-200 ${
+                    isActive
+                      ? "bg-purple-100 text-purple-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  <Icon className="h-5 w-5 mr-2" />
+                  {item.title}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
