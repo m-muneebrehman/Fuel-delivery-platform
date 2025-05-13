@@ -150,8 +150,10 @@ class MapsService {
                     }
                 }
             });
+            console.log(fuelPumps);
 
             return fuelPumps;
+
         } catch (error) {
             throw new Error(`Failed to get nearby fuel pumps: ${error.message}`);
         }
