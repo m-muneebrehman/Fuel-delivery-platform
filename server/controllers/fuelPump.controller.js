@@ -1,5 +1,5 @@
 const fuelPumpService = require("../services/fuelPump.service");
-const { validationResult ,cookie} = require("express-validator");
+const { validationResult, cookie } = require("express-validator");
 const fuelPumpModel = require("../models/fuelPump.model");
 const blacklistTokenModel = require("../models/blacklistToken.model");
 const mapsService = require("../services/maps.service")
@@ -21,19 +21,6 @@ module.exports.registerFuelPump = async (req, res, next) => {
 
     console.log('It was fine here');
 
-   
-    // Get coordinates from Google Maps API
-    // const location_detail = await mapsService.getAddressCoordinate(location);
-
-    console.log('The issue is here');
-
-    // Format location object according to schema
-    // const locationData = {
-    //     type: 'Point',
-    //     coordinates: [location_detail.lng, location_detail.lat], // MongoDB expects [longitude, latitude]
-    //     address: location
-    // };
-
     const hashedPassword = await fuelPumpModel.hashPassword(password);
 
     const fuelPump = await fuelPumpService.createFuelPump({ 
@@ -43,11 +30,8 @@ module.exports.registerFuelPump = async (req, res, next) => {
         location : location
     });
 
-    // const token = fuelPump.generateAuthToken();
-
     res.status(201).json({ fuelPump, fuelPumpId: fuelPump._id });
 }
-
 
 module.exports.loginFuelPump = async (req, res, next) => {
     const errors = validationResult(req);
@@ -73,14 +57,8 @@ module.exports.loginFuelPump = async (req, res, next) => {
         return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // const token = fuelPump.generateAuthToken();
-    // res.cookie("token", token);
-
     res.status(200).json({ fuelPump });
-    
-    
 }
-
 
 module.exports.getFuelPumpProfile = async (req, res, next) => {
     res.status(200).json(req.fuelPump);
@@ -94,4 +72,58 @@ module.exports.logoutFuelPump = async (req, res, next) => {
     res.clearCookie("token");
     res.status(200).json({ message: "Logged out successfully" });
 }
+
+// New controller functions for handling fuel pump requests
+
+// Get all fuel pump requests
+module.exports.getFuelPumpRequests = async (req, res) => {
+    try {
+        const requests = await fuelPumpService.getFuelPumpRequests();
+        res.status(200).json({
+            success: true,
+            data: requests
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Approve a fuel pump request
+module.exports.approveFuelPump = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const fuelPump = await fuelPumpService.approveFuelPump(id);
+        res.status(200).json({
+            success: true,
+            message: 'Fuel pump request approved successfully',
+            data: fuelPump
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Reject a fuel pump request
+module.exports.rejectFuelPump = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const fuelPump = await fuelPumpService.rejectFuelPump(id);
+        res.status(200).json({
+            success: true,
+            message: 'Fuel pump request rejected successfully',
+            data: fuelPump
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 

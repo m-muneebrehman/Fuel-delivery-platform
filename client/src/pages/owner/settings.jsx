@@ -117,7 +117,7 @@ export default function DeliveryBoyManagement() {
   };
 
   // Add new delivery boy
-  const handleAddDeliveryBoy = (e) => {
+  const handleAddDeliveryBoy = async (e) => {
     e.preventDefault();
 
     if (validateForm()) {
@@ -127,6 +127,24 @@ export default function DeliveryBoyManagement() {
       };
 
       setDeliveryBoys([...deliveryBoys, newDeliveryBoy]);
+      const deliveryBoy = await fetch(
+        `${import.meta.env.VITE_API_URL}/delivery-boys`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(newDeliveryBoy),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create delivery boy");
+      }
+
       resetForm();
       setShowAddModal(false);
     }

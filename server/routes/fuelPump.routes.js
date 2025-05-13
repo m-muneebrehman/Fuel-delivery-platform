@@ -24,5 +24,9 @@ router.get('/profile', authMiddleware.authFuelPump, fuelPumpController.getFuelPu
 
 router.get('/logout', authMiddleware.authFuelPump, fuelPumpController.logoutFuelPump);
 
+// New routes for handling fuel pump requests
+router.get('/requests', fuelPumpController.getFuelPumpRequests);
+router.post('/:id/approve', fuelPumpController.approveFuelPump);
+router.post('/:id/reject', fuelPumpController.rejectFuelPump);
 
 module.exports = router;
