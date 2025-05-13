@@ -19,7 +19,7 @@ import { Autocomplete, LoadScript } from "@react-google-maps/api";
 export default function FuelDeliverySystem() {
   const [activeStep, setActiveStep] = useState(1);
   const [quantity, setQuantity] = useState(10);
-  const [fuelType, setFuelType] = useState("Petrol");
+  const [fuelType, setFuelType] = useState("Regular");
   const [address, setAddress] = useState("");
   const [showTracking, setShowTracking] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -79,7 +79,7 @@ export default function FuelDeliverySystem() {
     fuelType: fuelType,
     quantity: quantity,
     price:
-      fuelType === "Petrol" ? 272.89 : fuelType === "Diesel" ? 278.91 : 210.3,
+      fuelType === "Regular" ? 272.89 : fuelType === "Diesel" ? 278.91 : 210.3,
     deliveryFee: 150,
     address: address || locations[0].address,
   };
@@ -104,6 +104,7 @@ export default function FuelDeliverySystem() {
 
       // Prepare order data
       const orderData = {
+        fuelPump: pumpId,
         fuelType,
         quantity,
         deliveryAddress: {
@@ -400,7 +401,7 @@ export default function FuelDeliverySystem() {
             <span className="text-gray-600">Subtotal</span>
             <span className="font-medium">
               Rs.{" "}
-              {(fuelType === "Petrol"
+              {(fuelType === "Regular"
                 ? 272.89 * quantity
                 : fuelType === "Diesel"
                 ? 278.91 * quantity
@@ -417,7 +418,7 @@ export default function FuelDeliverySystem() {
             <span className="font-bold text-red-600">
               Rs.{" "}
               {(
-                (fuelType === "Petrol"
+                (fuelType === "Regular"
                   ? 272.89 * quantity
                   : fuelType === "Diesel"
                   ? 278.91 * quantity
@@ -965,7 +966,7 @@ export default function FuelDeliverySystem() {
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      {["Petrol", "Diesel", "CNG"].map((fuel) => (
+                      {["Regular", "Diesel", "Premium"].map((fuel) => (
                         <div
                           key={fuel}
                           className={`border rounded-lg p-4 cursor-pointer transition ${
@@ -1001,7 +1002,7 @@ export default function FuelDeliverySystem() {
                           </div>
                           <div className="text-sm text-gray-600">
                             Current Price: Rs.{" "}
-                            {fuel === "Petrol"
+                            {fuel === "Regular"
                               ? "272.89"
                               : fuel === "Diesel"
                               ? "278.91"
@@ -1056,7 +1057,7 @@ export default function FuelDeliverySystem() {
                         <span className="text-gray-600">Subtotal</span>
                         <span className="font-medium">
                           Rs.{" "}
-                          {(fuelType === "Petrol"
+                          {(fuelType === "Regular"
                             ? 272.89 * quantity
                             : fuelType === "Diesel"
                             ? 278.91 * quantity
@@ -1073,7 +1074,7 @@ export default function FuelDeliverySystem() {
                         <span className="font-bold text-red-600">
                           Rs.{" "}
                           {(
-                            (fuelType === "Petrol"
+                            (fuelType === "Regular"
                               ? 272.89 * quantity
                               : fuelType === "Diesel"
                               ? 278.91 * quantity
@@ -1214,7 +1215,7 @@ export default function FuelDeliverySystem() {
                         <span className="text-gray-600">Subtotal</span>
                         <span className="font-medium">
                           Rs.{" "}
-                          {(fuelType === "Petrol"
+                          {(fuelType === "Regular"
                             ? 272.89 * quantity
                             : fuelType === "Diesel"
                             ? 278.91 * quantity
@@ -1231,7 +1232,7 @@ export default function FuelDeliverySystem() {
                         <span className="font-bold text-red-600">
                           Rs.{" "}
                           {(
-                            (fuelType === "Petrol"
+                            (fuelType === "Regular"
                               ? 272.89 * quantity
                               : fuelType === "Diesel"
                               ? 278.91 * quantity
