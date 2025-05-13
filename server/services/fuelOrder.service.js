@@ -104,6 +104,19 @@ class FuelOrderService {
         await order.save();
         return order;
     }
+
+    static async getFuelPumpOrders(fuelPumpId) {
+        try {
+            const orders = await FuelOrder.find({ fuelPump: fuelPumpId })
+                .populate('user', 'name email phone')
+                .populate('deliveryBoy', 'fullName phoneNumber')
+                .sort({ createdAt: -1 });
+
+            return orders;
+        } catch (error) {
+            throw new Error(`Failed to get fuel pump orders: ${error.message}`);
+        }
+    }
 }
 
 module.exports = FuelOrderService; 

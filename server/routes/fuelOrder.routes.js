@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const FuelOrderController = require('../controllers/fuelOrder.controller');
-const { authUser, adminMiddleware } = require('../middlewares/auth.middleware');
+const { authUser, adminMiddleware, authFuelPump } = require('../middlewares/auth.middleware');
 
 // User routes - Specific routes first
 router.post('/calculate-fare', authUser, FuelOrderController.calculateFare);
 router.get('/nearby-pumps', authUser, FuelOrderController.getNearbyFuelPumps);
 router.get('/user', authUser, FuelOrderController.getUserOrders);
+
+// Fuel pump routes
+router.get('/fuel-pump/orders', authFuelPump, FuelOrderController.getFuelPumpOrders);
 
 // Parameterized routes after specific routes
 router.post('/', authUser, FuelOrderController.createOrder);
