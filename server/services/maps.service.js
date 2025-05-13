@@ -18,14 +18,21 @@ class MapsService {
 
     /**
      * Calculate delivery fare based on distance and current conditions
-     * @param {Object} origin - Origin coordinates {latitude, longitude}
-     * @param {Object} destination - Destination coordinates {latitude, longitude}
+     * @param {Object|Array} origin - Origin coordinates {latitude, longitude} or [longitude, latitude]
+     * @param {Object|Array} destination - Destination coordinates {latitude, longitude} or [longitude, latitude]
      * @returns {Promise<number>} - Calculated fare
      */
     static async calculateDeliveryFare(origin, destination) {
         try {
-            const distance = await this.calculateDistance(origin, destination);
+            // Convert coordinates to consistent format
+            const originCoords = this.normalizeCoordinates(origin);
+            const destCoords = this.normalizeCoordinates(destination);
+            
+            const distance = await this.calculateDistance(originCoords, destCoords);
+            console.log('Distance:', distance);
+            
             const surgeMultiplier = await this.getSurgeMultiplier();
+            console.log('Surge multiplier:', surgeMultiplier);
             
             let fare = this.BASE_FARE;
             if (distance > this.MINIMUM_DISTANCE) {
@@ -33,9 +40,31 @@ class MapsService {
             }
             
             fare *= surgeMultiplier;
+            console.log('Final fare:', fare);
             return this.roundToTwoDecimals(fare);
         } catch (error) {
+            console.error('Error calculating delivery fare:', error);
             throw new Error(`Failed to calculate delivery fare: ${error.message}`);
+        }
+    }
+
+    /**
+     * Normalize coordinates to {latitude, longitude} format
+     * @param {Object|Array} coords - Coordinates in any format
+     * @returns {Object} - Normalized coordinates {latitude, longitude}
+     */
+    static normalizeCoordinates(coords) {
+        if (Array.isArray(coords)) {
+            // Handle [longitude, latitude] format
+            return {
+                latitude: coords[1],
+                longitude: coords[0]
+            };
+        } else if (coords.latitude !== undefined && coords.longitude !== undefined) {
+            // Already in correct format
+            return coords;
+        } else {
+            throw new Error('Invalid coordinate format');
         }
     }
 
@@ -107,8 +136,22 @@ class MapsService {
      */
     static async getNearbyFuelPumps(location, radius = this.DEFAULT_RADIUS) {
         try {
-            // In production, this would use a real API or database query
-            return this.generateMockFuelPumps(location, radius);
+            const FuelPump = require('../models/fuelPump.model');
+            
+            // Find fuel pumps within radius using MongoDB geospatial query
+            const fuelPumps = await FuelPump.find({
+                location: {
+                    $near: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [location.longitude, location.latitude]
+                        },
+                        $maxDistance: radius
+                    }
+                }
+            });
+
+            return fuelPumps;
         } catch (error) {
             throw new Error(`Failed to get nearby fuel pumps: ${error.message}`);
         }

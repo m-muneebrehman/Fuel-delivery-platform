@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const fuelOrderSchema = new mongoose.Schema({
+  otp:{
+    type: String,
+    required: true
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -13,7 +17,7 @@ const fuelOrderSchema = new mongoose.Schema({
   },
   deliveryBoy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'DeliveryBoy'
   },
   orderStatus: {
     type: String,
@@ -28,19 +32,23 @@ const fuelOrderSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  deliveryFare: {
+    type: Number,
+    required: true
+  },
   totalAmount: {
     type: Number,
     required: true
   },
   deliveryAddress: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    coordinates: {
-      latitude: Number,
-      longitude: Number
-    }
+    type: {
+      address: String,
+      coordinates: {
+        latitude: Number,
+        longitude: Number
+      }
+    },
+    required: true
   },
   createdAt: {
     type: Date,

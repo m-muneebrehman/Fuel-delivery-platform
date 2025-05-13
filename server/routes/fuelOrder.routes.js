@@ -1,19 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const FuelOrderController = require('../controllers/fuelOrder.controller');
-const { authMiddleware, adminMiddleware } = require('../middlewares/auth.middleware');
+const { authUser, adminMiddleware } = require('../middlewares/auth.middleware');
 
-// User routes
-router.post('/', authMiddleware, FuelOrderController.createOrder);
-router.get('/user', authMiddleware, FuelOrderController.getUserOrders);
-router.get('/:orderId', authMiddleware, FuelOrderController.getOrderById);
-router.post('/:orderId/cancel', authMiddleware, FuelOrderController.cancelOrder);
-router.post('/calculate-fare', authMiddleware, FuelOrderController.calculateFare);
-router.get('/nearby-pumps', authMiddleware, FuelOrderController.getNearbyFuelPumps);
+// User routes - Specific routes first
+router.post('/calculate-fare', authUser, FuelOrderController.calculateFare);
+router.get('/nearby-pumps', authUser, FuelOrderController.getNearbyFuelPumps);
+router.get('/user', authUser, FuelOrderController.getUserOrders);
 
-// Admin routes
-router.get('/status/:status', authMiddleware, adminMiddleware, FuelOrderController.getOrdersByStatus);
-router.put('/:orderId/status', authMiddleware, adminMiddleware, FuelOrderController.updateOrderStatus);
-router.put('/:orderId/assign-delivery', authMiddleware, adminMiddleware, FuelOrderController.assignDeliveryBoy);
+// Parameterized routes after specific routes
+router.post('/', authUser, FuelOrderController.createOrder);
+router.get('/:orderId', authUser, FuelOrderController.getOrderById);
+router.post('/:orderId/cancel', authUser, FuelOrderController.cancelOrder);
 
-module.exports = router; 
+// fuel pump owner routes
+router.get('/status/:status', authUser, adminMiddleware, FuelOrderController.getOrdersByStatus);
+router.put('/:orderId/status', authUser, adminMiddleware, FuelOrderController.updateOrderStatus);
+router.put('/:orderId/assign-delivery', authUser, adminMiddleware, FuelOrderController.assignDeliveryBoy);
+
+module.exports = router;  

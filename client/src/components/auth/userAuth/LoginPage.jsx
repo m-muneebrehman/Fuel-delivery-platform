@@ -45,9 +45,15 @@ const LoginPage = () => {
 
       const userId = data.userId;
 
-      console.log('ID', userId);
-      localStorage.setItem('userId', userId);
+      const token = data.token;
 
+      console.log('ID', userId);
+      const expiryTime = new Date().getTime() + (60 * 60 * 1000); // 1 hour from now
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('token', token); 
+      localStorage.setItem('tokenExpiry', expiryTime);
+      localStorage.setItem('userIdExpiry', expiryTime);
+      
       navigate("/user/dashboard");
     } catch (err) {
       console.error("Login error:", err);

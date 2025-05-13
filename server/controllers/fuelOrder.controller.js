@@ -1,5 +1,6 @@
 const FuelOrderService = require('../services/fuelOrder.service');
 const MapsService = require('../services/maps.service');
+const crypto = require('crypto');
 
 class FuelOrderController {
     static async createOrder(req, res) {
@@ -8,6 +9,10 @@ class FuelOrderController {
                 ...req.body,
                 user: req.user._id
             };
+
+            // Generate a 6-digit OTP using crypto
+            const otp = crypto.randomInt(100000, 999999).toString().padStart(6, '0');
+            orderData.otp = otp;
 
             const order = await FuelOrderService.createOrder(orderData);
             res.status(201).json({

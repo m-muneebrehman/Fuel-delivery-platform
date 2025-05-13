@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const MapsService = require('../services/maps.service');
 const { authMiddleware } = require('../middlewares/auth.middleware')
+const axios = require('axios');
 
 // Calculate delivery fare
 router.post('/calculate-fare', authMiddleware, async (req, res) => {
@@ -38,6 +39,37 @@ router.post('/route', authMiddleware, async (req, res) => {
         });
     }
 });
+
+// Endpoint to get address suggestions
+router.get('/autocomplete', async (req, res) => {
+    const { input } = req.query;
+  
+    if (!input) {
+      return res.status(400).json({ error: "Input is required" });
+    }
+  
+    try {
+      const response = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+        params: {
+          input,
+          key: process.env.GOOGLE_API_KEY,
+          types: 'geocode', // restrict to addresses
+          language: 'en'
+        }
+      });
+  
+      const suggestions = response.data.predictions.map((prediction) => ({
+        description: prediction.description,
+        placeId: prediction.place_id
+      }));
+  
+      res.json({ suggestions });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch suggestions" });
+    }
+  });
+  
 
 // Get nearby fuel pumps
 router.get('/nearby-pumps', authMiddleware, async (req, res) => {

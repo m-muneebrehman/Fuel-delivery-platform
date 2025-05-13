@@ -1,19 +1,27 @@
 const FuelOrder = require('../models/fuelOrder.model');
 const MapsService = require('./maps.service');
+const FuelPump = require('../models/fuelPump.model');
 
 class FuelOrderService {
     static async createOrder(orderData) {
         try {
+            // Validate and get fuel pump data
+            const fuelPumpData = await FuelPump.findById(orderData.fuelPump);
+            if (!fuelPumpData) {
+                throw new Error('Fuel pump not found');
+            }
+
             // Calculate delivery fare
             const fare = await MapsService.calculateDeliveryFare(
-                orderData.fuelPump.coordinates,
+                fuelPumpData.location.coordinates,
                 orderData.deliveryAddress.coordinates
             );
 
-            // Calculate total amount (fuel cost + delivery fare)
+            // Calculate total amount
             const fuelPrice = await this.getFuelPrice(orderData.fuelType);
             const totalAmount = (fuelPrice * orderData.quantity) + fare;
 
+            // Create and save order
             const order = new FuelOrder({
                 ...orderData,
                 totalAmount,
@@ -23,6 +31,7 @@ class FuelOrderService {
 
             await order.save();
             return order;
+
         } catch (error) {
             throw new Error(`Failed to create fuel order: ${error.message}`);
         }
