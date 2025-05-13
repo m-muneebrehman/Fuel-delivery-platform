@@ -20,9 +20,10 @@ app.use(
     credentials: true, // allow cookies to be sent
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
 
 connectToDb();
 

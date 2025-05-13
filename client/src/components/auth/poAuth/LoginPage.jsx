@@ -43,6 +43,7 @@ const PetrolOwnerLoginPage = () => {
           confirmButtonColor: "#28a745",
         });
       } else {
+        console.log(data.ownerId);
         localStorage.setItem("token", data.token);
         localStorage.setItem("ownerId", data.ownerId);
         localStorage.setItem("userType", "fuelPump");
