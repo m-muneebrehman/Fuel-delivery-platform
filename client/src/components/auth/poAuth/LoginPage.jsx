@@ -34,7 +34,7 @@ const PetrolOwnerLoginPage = () => {
       });
 
       const data = response.data;
-
+      console.log(data);
       if (data.verified === false) {
         Swal.fire({
           icon: "info",
@@ -43,7 +43,14 @@ const PetrolOwnerLoginPage = () => {
           confirmButtonColor: "#28a745",
         });
       } else {
-        localStorage.setItem("ownerId", data.ownerId); // Store token in local storage
+        // Store both token and ownerId in localStorage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("ownerId", data.ownerId);
+        localStorage.setItem("userType", "fuelPump"); // Add user type for authorization
+        
+        // Set default authorization header for future requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+        
         navigate("/petrol-owner/dashboard");
       }
     } catch (err) {

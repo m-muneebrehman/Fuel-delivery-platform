@@ -36,6 +36,10 @@ const createAuthMiddleware = (model, userType) => {
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const user = await model.findById(decoded._id);
+
+            console.log(token);
+
+            console.log(user);
             
             if (!user) {
                 return res.status(401).json({
@@ -44,12 +48,7 @@ const createAuthMiddleware = (model, userType) => {
                 });
             }
 
-            // if (user.status !== 'active') {
-            //     return res.status(403).json({
-            //         success: false,
-            //         message: "Account is not active"
-            //     });
-            // }
+            
 
             req[userType] = user;
             req.user = user; // ✅ add this line

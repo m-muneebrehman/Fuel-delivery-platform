@@ -21,7 +21,7 @@ export default function NotificationsPage() {
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fuelpumps/requests`,
           {
-            method: 'GET',
+            method: 'GET'
           }
         );
 

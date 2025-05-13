@@ -3,6 +3,7 @@ const { validationResult, cookie } = require("express-validator");
 const fuelPumpModel = require("../models/fuelPump.model");
 const blacklistTokenModel = require("../models/blacklistToken.model");
 const mapsService = require("../services/maps.service")
+const jwt = require("jsonwebtoken");
 
 module.exports.registerFuelPump = async (req, res, next) => {
     const errors = validationResult(req);
@@ -56,8 +57,16 @@ module.exports.loginFuelPump = async (req, res, next) => {
     if(!isMatch) {
         return res.status(401).json({ message: "Invalid email or password" });
     }
-
-    res.status(200).json({ fuelPump });
+    // Generate JWT token
+    const token = jwt.sign({ _id: fuelPump._id }, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+      });
+    // Return only necessary data and token
+    res.status(200).json({
+        token,
+        ownerId: fuelPump._id,
+        verified: fuelPump.isVerified
+    });
 }
 
 module.exports.getFuelPumpProfile = async (req, res, next) => {
