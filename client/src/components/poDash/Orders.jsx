@@ -240,22 +240,22 @@ function Orders() {
       {/* Orders Section */}
       <div className="mb-12">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-            <ShoppingBag className="mr-2 text-red-600" size={24} />
+          <h2 className="text-2xl font-extrabold text-blue-900 dark:text-blue-100 flex items-center">
+            <ShoppingBag className="mr-2 text-blue-500" size={24} />
             Orders
           </h2>
         </div>
 
         {/* Orders Table */}
-        <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-red-100">
+        <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-blue-100 dark:border-blue-900">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-red-50">
+            <table className="min-w-full divide-y divide-blue-200 dark:divide-blue-900">
+              <thead className="bg-blue-50 dark:bg-blue-900/60">
                 <tr>
                   <th
                     onClick={() => requestSort("_id")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200"
+                    className="px-6 py-3 text-left text-base font-bold text-blue-900 dark:text-blue-100 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Order ID
@@ -275,7 +275,7 @@ function Orders() {
                   <th
                     onClick={() => requestSort("quantity")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200 hidden sm:table-cell"
+                    className="px-6 py-3 text-left text-base font-bold text-blue-900 dark:text-blue-100 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Quantity
@@ -285,7 +285,7 @@ function Orders() {
                   <th
                     onClick={() => requestSort("totalAmount")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200"
+                    className="px-6 py-3 text-left text-base font-bold text-blue-900 dark:text-blue-100 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Total
@@ -295,7 +295,7 @@ function Orders() {
                   <th
                     onClick={() => requestSort("orderStatus")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200"
+                    className="px-6 py-3 text-left text-base font-bold text-blue-900 dark:text-blue-100 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Status
@@ -305,7 +305,7 @@ function Orders() {
                   <th
                     onClick={() => requestSort("createdAt")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200 hidden lg:table-cell"
+                    className="px-6 py-3 text-left text-base font-bold text-blue-900 dark:text-blue-100 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Date
@@ -314,42 +314,42 @@ function Orders() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-red-700 uppercase tracking-wider"
+                    className="px-6 py-3 text-right text-base font-bold text-blue-900 dark:text-blue-100 uppercase tracking-wider"
                   >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-red-100">
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-blue-100 dark:divide-blue-900">
                 {sortedOrders.map((order, idx) => (
                   <tr
                     key={order._id}
-                    className={`hover:bg-red-50 transition duration-150 ${
-                      idx % 2 === 0 ? "bg-white" : "bg-red-50/30"
+                    className={`hover:bg-blue-50 dark:hover:bg-blue-900/40 transition duration-150 ${
+                      idx % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-blue-50/40 dark:bg-blue-900/30"
                     }`}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-base font-semibold text-blue-900 dark:text-blue-100">
                       #{order._id.slice(-4)}
                     </td>
                     {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden md:table-cell">
                       {order.user?.name || 'N/A'}
                     </td> */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden sm:table-cell">
+                    <td className="px-6 py-4 whitespace-nowrap text-base text-blue-800 dark:text-blue-200 hidden sm:table-cell">
                       {order.quantity} L
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-base font-semibold text-blue-900 dark:text-blue-100">
                       ${order.totalAmount.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.orderStatus} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden lg:table-cell">
+                    <td className="px-6 py-4 whitespace-nowrap text-base text-blue-800 dark:text-blue-200 hidden lg:table-cell">
                       <div className="flex items-center">
-                        <Clock size={14} className="mr-1 text-gray-400" />
+                        <Clock size={16} className="mr-1 text-blue-400" />
                         {new Date(order.createdAt).toLocaleDateString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-base font-semibold">
                       <button 
                         className="px-3 py-1 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition duration-200"
                         onClick={() => handleViewOrder(order)}
@@ -362,7 +362,7 @@ function Orders() {
               </tbody>
             </table>
           </div>
-          <div className="bg-gray-50 px-4 py-3 text-sm text-gray-700 border-t border-red-100">
+          <div className="bg-blue-50 dark:bg-blue-900/60 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 border-t border-blue-100 dark:border-blue-900">
             Showing {orders.length} orders
           </div>
         </div>
