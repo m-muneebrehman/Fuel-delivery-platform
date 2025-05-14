@@ -286,7 +286,7 @@ export default function FuelDeliverySystem() {
             import.meta.env.VITE_API_URL
           }/fuel-orders/nearby-pumps?location=${JSON.stringify(
             location
-          )}&radius=5000`,
+          )}&radius=10000`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -304,7 +304,7 @@ export default function FuelDeliverySystem() {
         if (!data.success) {
           throw new Error(data.message || "Failed to fetch nearby fuel pumps");
         }
-
+        console.log(data.data);
         setNearbyPumps(data.data);
       } catch (error) {
         console.error("Error:", error);
