@@ -1,79 +1,33 @@
 const FuelPrice = require('../models/fuelPrice.model');
 
-class FuelPriceController {
+const fuelPriceController = {
     // Get all fuel prices
-    static async getAllPrices(req, res) {
+    getAllPrices: async (req, res) => {
         try {
-            const prices = await FuelPrice.find({});
+            const prices = await FuelPrice.getAllPrices();
             res.status(200).json({
                 success: true,
                 data: prices
             });
         } catch (error) {
-            console.error('Error fetching fuel prices:', error);
+            console.error('Error in getAllPrices:', error);
             res.status(500).json({
                 success: false,
-                message: error.message || 'Error fetching fuel prices'
+                message: 'Internal server error'
             });
         }
-    }
+    },
 
-    // Update a fuel price (admin only)
-    static async updatePrice(req, res) {
-        try {
-            const { fuelType, pricePerLiter } = req.body;
-
-            if (!fuelType || !pricePerLiter) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Fuel type and price per liter are required'
-                });
-            }
-
-            if (!['Regular', 'Premium', 'Diesel'].includes(fuelType)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid fuel type. Must be Regular, Premium, or Diesel'
-                });
-            }
-
-            const updatedPrice = await FuelPrice.updatePrice(
-                fuelType,
-                pricePerLiter
-            );
-
-            res.status(200).json({
-                success: true,
-                message: 'Fuel price updated successfully',
-                data: updatedPrice
-            });
-        } catch (error) {
-            console.error('Error updating fuel price:', error);
-            res.status(500).json({
-                success: false,
-                message: error.message || 'Error updating fuel price'
-            });
-        }
-    }
-
-    // Get price for a specific fuel type
-    static async getPriceByType(req, res) {
+    // Get price by fuel type
+    getPriceByType: async (req, res) => {
         try {
             const { fuelType } = req.params;
-
-            if (!['Regular', 'Premium', 'Diesel'].includes(fuelType)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid fuel type. Must be Regular, Premium, or Diesel'
-                });
-            }
-
             const price = await FuelPrice.findOne({ fuelType });
-
+            
             if (!price) {
                 return res.status(404).json({
                     success: false,
-                    message: `Price for ${fuelType} not found`
+                    message: 'Fuel price not found'
                 });
             }
 
@@ -82,13 +36,41 @@ class FuelPriceController {
                 data: price
             });
         } catch (error) {
-            console.error('Error fetching fuel price:', error);
+            console.error('Error in getPriceByType:', error);
             res.status(500).json({
                 success: false,
-                message: error.message || 'Error fetching fuel price'
+                message: 'Internal server error'
+            });
+        }
+    },
+
+    // Update fuel price
+    updatePrice: async (req, res) => {
+        try {
+            const { fuelType, pricePerLiter } = req.body;
+
+            if (!fuelType || !pricePerLiter) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Fuel type and price are required'
+                });
+            }
+
+            const updatedPrice = await FuelPrice.updatePrice(fuelType, pricePerLiter);
+            
+            res.status(200).json({
+                success: true,
+                message: 'Price updated successfully',
+                data: updatedPrice
+            });
+        } catch (error) {
+            console.error('Error in updatePrice:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Internal server error'
             });
         }
     }
-}
+};
 
-module.exports = FuelPriceController; 
+module.exports = fuelPriceController; 

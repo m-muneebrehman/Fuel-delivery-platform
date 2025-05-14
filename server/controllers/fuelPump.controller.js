@@ -7,80 +7,146 @@ const jwt = require("jsonwebtoken");
 const DeliveryBoyModel = require("../models/deliveryBoy.model");
 
 module.exports.registerFuelPump = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { name, email, password, location } = req.body;
+        
+        // Check if fuel pump already exists
+        const existingPump = await fuelPumpModel.findOne({ email });
+        if (existingPump) {
+            return res.status(400).json({
+                success: false,
+                message: 'Fuel pump with this email already exists'
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await fuelPumpModel.hashPassword(password);
+        
+        // Create new fuel pump
+        const fuelPump = new fuelPumpModel({
+            name,
+            email,
+            password: hashedPassword,
+            location
+        });
+
+        await fuelPump.save();
+
+        // Generate auth token
+        const token = fuelPump.generateAuthToken();
+
+        res.status(201).json({
+            success: true,
+            message: 'Fuel pump registered successfully',
+            data: {
+                _id: fuelPump._id,
+                name: fuelPump.name,
+                email: fuelPump.email,
+                location: fuelPump.location,
+                token
+            }
+        });
+    } catch (error) {
+        console.error('Error in registerFuelPump:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
     }
-
-    const { name, email, password, location } = req.body;
-
-    console.log('location', location);
-
-    const isFuelPumpExist = await fuelPumpModel.findOne({ email });
-    if(isFuelPumpExist) {
-        return res.status(400).json({ message: "Fuel pump already exists" });
-    }
-
-    console.log('It was fine here');
-
-    const hashedPassword = await fuelPumpModel.hashPassword(password);
-
-    const fuelPump = await fuelPumpService.createFuelPump({ 
-        name, 
-        email, 
-        password: hashedPassword, 
-        location : location
-    });
-
-    res.status(201).json({ fuelPump, fuelPumpId: fuelPump._id });
 }
 
 module.exports.loginFuelPump = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
+
+        const { email, password } = req.body;
+
+        // Find fuel pump and include password for verification
+        const fuelPump = await fuelPumpModel.findOne({ email }).select('+password');
+        if (!fuelPump) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        // Verify password
+        const isPasswordValid = await fuelPump.comparePassword(password);
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        // Generate token
+        const token = fuelPump.generateAuthToken();
+
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            data: {
+                _id: fuelPump._id,
+                name: fuelPump.name,
+                email: fuelPump.email,
+                location: fuelPump.location,
+                token
+            }
+        });
+    } catch (error) {
+        console.error('Error in loginFuelPump:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
     }
-
-    const { email, password } = req.body;
-
-    const fuelPump = await fuelPumpModel.findOne({ email }).select("+password");
-
-    if(!fuelPump) {
-        return res.status(401).json({ message: "Invalid email or password" });
-    }
-
-    if(fuelPump.isVerified === false) {
-        return res.status(200).json({ verified: fuelPump.isVerified });
-    }
-
-    const isMatch = await fuelPump.comparePassword(password);
-
-    if(!isMatch) {
-        return res.status(401).json({ message: "Invalid email or password" });
-    }
-    // Generate JWT token with longer expiration
-    const token = jwt.sign({ _id: fuelPump._id }, process.env.JWT_SECRET, {
-        expiresIn: "7d", // Changed from 1d to 7d
-      });
-    // Return only necessary data and token
-    res.status(200).json({
-        token,
-        ownerId: fuelPump._id,
-        verified: fuelPump.isVerified
-    });
 }
 
 module.exports.getFuelPumpProfile = async (req, res, next) => {
-    res.status(200).json(req.fuelPump);
+    try {
+        const fuelPump = await fuelPumpModel.findById(req.user._id);
+        if (!fuelPump) {
+            return res.status(404).json({
+                success: false,
+                message: 'Fuel pump not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: fuelPump
+        });
+    } catch (error) {
+        console.error('Error in getFuelPumpProfile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
 }
 
 module.exports.logoutFuelPump = async (req, res, next) => {
-    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-
-    await blacklistTokenModel.create({ token });
-    
-    res.clearCookie("token");
-    res.status(200).json({ message: "Logged out successfully" });
+    try {
+        res.clearCookie('token');
+        res.status(200).json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    } catch (error) {
+        console.error('Error in logoutFuelPump:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
 }
 
 // New controller functions for handling fuel pump requests
@@ -88,15 +154,16 @@ module.exports.logoutFuelPump = async (req, res, next) => {
 // Get all fuel pump requests
 module.exports.getFuelPumpRequests = async (req, res) => {
     try {
-        const requests = await fuelPumpService.getFuelPumpRequests();
+        const unverifiedPumps = await fuelPumpModel.find({ isVerified: false });
         res.status(200).json({
             success: true,
-            data: requests
+            data: unverifiedPumps
         });
     } catch (error) {
-        res.status(400).json({
+        console.error('Error in getFuelPumpRequests:', error);
+        res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Internal server error'
         });
     }
 };
@@ -105,16 +172,29 @@ module.exports.getFuelPumpRequests = async (req, res) => {
 module.exports.approveFuelPump = async (req, res) => {
     try {
         const { id } = req.params;
-        const fuelPump = await fuelPumpService.approveFuelPump(id);
+        const fuelPump = await fuelPumpModel.findByIdAndUpdate(
+            id,
+            { isVerified: true },
+            { new: true }
+        );
+
+        if (!fuelPump) {
+            return res.status(404).json({
+                success: false,
+                message: 'Fuel pump not found'
+            });
+        }
+
         res.status(200).json({
             success: true,
-            message: 'Fuel pump request approved successfully',
+            message: 'Fuel pump approved successfully',
             data: fuelPump
         });
     } catch (error) {
-        res.status(400).json({
+        console.error('Error in approveFuelPump:', error);
+        res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Internal server error'
         });
     }
 };
@@ -123,16 +203,24 @@ module.exports.approveFuelPump = async (req, res) => {
 module.exports.rejectFuelPump = async (req, res) => {
     try {
         const { id } = req.params;
-        const fuelPump = await fuelPumpService.rejectFuelPump(id);
+        const fuelPump = await fuelPumpModel.findByIdAndDelete(id);
+
+        if (!fuelPump) {
+            return res.status(404).json({
+                success: false,
+                message: 'Fuel pump not found'
+            });
+        }
+
         res.status(200).json({
             success: true,
-            message: 'Fuel pump request rejected successfully',
-            data: fuelPump
+            message: 'Fuel pump rejected and removed successfully'
         });
     } catch (error) {
-        res.status(400).json({
+        console.error('Error in rejectFuelPump:', error);
+        res.status(500).json({
             success: false,
-            message: error.message
+            message: 'Internal server error'
         });
     }
 };
@@ -162,6 +250,23 @@ module.exports.getMyDeliveryBoys = async (req, res) => {
             success: false,
             message: 'Error fetching delivery boys',
             error: error.message
+        });
+    }
+};
+
+// Get all verified fuel pumps
+module.exports.getVerifiedFuelPumps = async (req, res) => {
+    try {
+        const verifiedPumps = await fuelPumpModel.find({ isVerified: true });
+        res.status(200).json({
+            success: true,
+            data: verifiedPumps
+        });
+    } catch (error) {
+        console.error('Error in getVerifiedFuelPumps:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
         });
     }
 };

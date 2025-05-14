@@ -117,6 +117,7 @@ module.exports.loginDeliveryBoy = async (req, res, next) => {
 };
 
 
+
 module.exports.getAllDeliveryBoys = async (req, res, next) => {
   const { pumpId } = req.query;
   try {
@@ -261,4 +262,21 @@ module.exports.rejectDeliveryBoy = async (req, res) => {
       message: "Internal server error"
     });
   }
+};
+
+// Get total number of delivery boys
+module.exports.getTotalDeliveryBoys = async (req, res) => {
+    try {
+        const totalCount = await deliveryBoyModel.countDocuments();
+        res.status(200).json({
+            success: true,
+            data: totalCount
+        });
+    } catch (error) {
+        console.error('Error in getTotalDeliveryBoys:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
 };

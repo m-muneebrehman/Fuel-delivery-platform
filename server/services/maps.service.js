@@ -10,9 +10,9 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 
 class MapsService {
     // Constants
-    static BASE_FARE = 5.00;
-    static PER_KM_RATE = 2.00;
-    static MINIMUM_DISTANCE = 2; // in kilometers
+    static BASE_FARE = 150.00;
+    static PER_KM_RATE = 25.00;
+    static MINIMUM_DISTANCE = 1; // in kilometers
     static EARTH_RADIUS = 6371; // in kilometers
     static DEFAULT_RADIUS = 5000; // in meters
 
@@ -25,6 +25,7 @@ class MapsService {
     static async calculateDeliveryFare(origin, destination) {
         try {
             // Convert coordinates to consistent format
+            console.log(origin, destination);
             const originCoords = this.normalizeCoordinates(origin);
             const destCoords = this.normalizeCoordinates(destination);
             

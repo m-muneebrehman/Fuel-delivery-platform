@@ -8,16 +8,42 @@ const axios = require('axios');
 router.post('/calculate-fare', authMiddleware, async (req, res) => {
     try {
         const { origin, destination } = req.body;
+        
+        // Validate input
+        if (!origin || !destination || 
+            !origin.latitude || !origin.longitude || 
+            !destination.latitude || !destination.longitude) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid coordinates provided. Both origin and destination must include latitude and longitude.'
+            });
+        }
+
+        // Calculate fare using MapsService
         const fare = await MapsService.calculateDeliveryFare(origin, destination);
+        
+        // Return response with fare
         res.json({
             success: true,
-            data: { fare }
+            data: {
+                fare,
+                currency: 'PKR',
+                details: {
+                    baseFare: MapsService.BASE_FARE,
+                    perKmRate: MapsService.PER_KM_RATE,
+                    minimumDistance: MapsService.MINIMUM_DISTANCE
+                }
+            }
         });
     } catch (error) {
         console.error('Error calculating fare:', error);
         res.status(500).json({
             success: false,
-            message: error.message
+            message: error.message || 'Failed to calculate delivery fare',
+            error: {
+                code: 'FARE_CALCULATION_ERROR',
+                details: error.message
+            }
         });
     }
 });

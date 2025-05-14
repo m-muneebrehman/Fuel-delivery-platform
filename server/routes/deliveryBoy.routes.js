@@ -22,6 +22,9 @@ router.post(
   deliveryBoyController.registerDeliveryBoy
 );
 
+
+router.get('/getTotalDeliveryBoys', deliveryBoyController.getTotalDeliveryBoys);
+
 router.get('/getDeliveryBoys', deliveryBoyController.getAllDeliveryBoys);
 
 router.delete('/delete', deliveryBoyController.deleteDeliveryBoy);

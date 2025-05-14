@@ -15,6 +15,7 @@ import {
   Menu,
 } from "lucide-react";
 import { Autocomplete, LoadScript } from "@react-google-maps/api";
+import { toast } from 'react-hot-toast';
 
 export default function FuelDeliverySystem() {
   const [activeStep, setActiveStep] = useState(1);
@@ -28,6 +29,8 @@ export default function FuelDeliverySystem() {
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [nearbyPumps, setNearbyPumps] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [deliveryCoordinates, setDeliveryCoordinates] = useState(null);
+  const [selectedPumpCoordinates, setSelectedPumpCoordinates] = useState(null);
   const [autocomplete, setAutocomplete] = useState(null);
   const [searchBox, setSearchBox] = useState(null);
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
@@ -37,11 +40,17 @@ export default function FuelDeliverySystem() {
   const [orderError, setOrderError] = useState(null);
   const [pumpId, setPumpId] = useState(0);
   const [fuelPrices, setFuelPrices] = useState({
-    Regular: { pricePerLiter: 272.89, deliveryFee: 150 },
-    Diesel: { pricePerLiter: 278.91, deliveryFee: 150 },
-    Premium: { pricePerLiter: 210.3, deliveryFee: 150 }
+    Regular: { pricePerLiter: 0 },
+    Diesel: { pricePerLiter: 0 },
+    Premium: { pricePerLiter: 0 }
   });
   const [loadingPrices, setLoadingPrices] = useState(true);
+  const [priceError, setPriceError] = useState(null);
+  const DELIVERY_FEE = 150; // Fixed delivery fee
+  const [selectedPumpAddress, setSelectedPumpAddress] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState(150); // Default value
+  const [isCalculatingFare, setIsCalculatingFare] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   // Dummy delivery locations in Islamabad
   const locations = [
@@ -90,53 +99,131 @@ export default function FuelDeliverySystem() {
     address: address || locations[0].address,
   };
 
-  const pumpSelected = (pumpId, pumpAddress) => {
-    setAddress(pumpAddress);
+  const pumpSelected = (pumpId, pumpAddress, pumpCoordinates) => {
     setPumpId(pumpId);
-    console.log(pumpAddress);
-    console.log(pumpId);
+    setSelectedPumpAddress(pumpAddress);
+    setSelectedPumpCoordinates(pumpCoordinates);
+    console.log("Selected pump address:", pumpAddress);
+    console.log("Selected pump coordinates:", pumpCoordinates);
+    console.log("Selected pump ID:", pumpId);
   };
 
-  // Fetch fuel prices from backend
-  useEffect(() => {
-    fetchFuelPrices();
-  }, []);
-
-  const fetchFuelPrices = async () => {
+  // Fetch fuel prices
+  const fetchPrices = async () => {
+    setLoadingPrices(true);
     try {
-      setLoadingPrices(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/fuel-prices`);
-      const data = await response.json();
+      // Use a fallback URL if the environment variable isn't available
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      console.log('Fetching fuel prices from:', `${apiUrl}/fuel-prices`);
       
-      if (data.success) {
-        // Convert array to object for easier access
-        const pricesObj = {};
+      const response = await fetch(`${apiUrl}/fuel-prices`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch fuel prices: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log('API Response:', data);
+      
+      // Handle different API response formats
+      if (data.success && Array.isArray(data.data)) {
+        console.log('Setting prices from data.data:', data.data);
+        setFuelPrices(data.data.reduce((acc, price) => ({
+          ...acc,
+          [price.fuelType]: { pricePerLiter: price.pricePerLiter }
+        }), {}));
+        
+        // Initialize edit values
+        const initialEditValues = {};
         data.data.forEach(price => {
-          pricesObj[price.fuelType] = {
-            pricePerLiter: price.pricePerLiter,
-            deliveryFee: price.deliveryFee
+          initialEditValues[price.fuelType] = {
+            pricePerLiter: price.pricePerLiter
           };
         });
+        setPriceError(null);
+      } 
+      // If the API returns an array directly
+      else if (Array.isArray(data)) {
+        console.log('Setting prices from direct array:', data);
+        setFuelPrices(data.reduce((acc, price) => ({
+          ...acc,
+          [price.fuelType]: { pricePerLiter: price.pricePerLiter }
+        }), {}));
         
-        setFuelPrices(pricesObj);
-      } else {
-        console.error('Failed to fetch fuel prices');
+        // Initialize edit values
+        const initialEditValues = {};
+        data.forEach(price => {
+          initialEditValues[price.fuelType] = {
+            pricePerLiter: price.pricePerLiter
+          };
+        });
+        setPriceError(null);
       }
-    } catch (error) {
-      console.error('Error fetching fuel prices:', error);
+      else {
+        throw new Error(data.message || 'Failed to fetch fuel prices - unexpected response format');
+      }
+    } catch (err) {
+      setPriceError('Error loading fuel prices: ' + err.message);
+      console.error('Fetch error:', err);
     } finally {
       setLoadingPrices(false);
+      setIsPageLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPrices();
+  }, []);
 
   // Get current fuel price based on selected fuel type
   const getCurrentFuelPrice = () => {
     return fuelPrices[fuelType]?.pricePerLiter || 0;
   };
 
-  // Get current delivery fee
+  // Calculate delivery fee when location is selected
+  const calculateDeliveryFare = async () => {
+    if (deliveryCoordinates && selectedPumpCoordinates) {
+      try {
+        setIsCalculatingFare(true);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/maps/calculate-fare`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            origin: selectedPumpCoordinates,
+            destination: deliveryCoordinates
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to calculate delivery fare');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          setDeliveryFee(data.data.fare);
+        } else {
+          throw new Error(data.message || 'Failed to calculate delivery fare');
+        }
+      } catch (error) {
+        console.error('Error calculating delivery fare:', error);
+        toast.error('Failed to calculate delivery fee. Using default fee.');
+        setDeliveryFee(150);
+      } finally {
+        setIsCalculatingFare(false);
+      }
+    }
+  };
+
+  // Call calculateDeliveryFare when coordinates change
+  useEffect(() => {
+    calculateDeliveryFare();
+  }, [deliveryCoordinates, selectedPumpCoordinates]);
+
+  // Get delivery fee
   const getDeliveryFee = () => {
-    return fuelPrices[fuelType]?.deliveryFee || 150;
+    return deliveryFee;
   };
 
   // Calculate subtotal
@@ -333,9 +420,7 @@ export default function FuelDeliverySystem() {
         const place = searchBox.getPlace();
 
         if (!place.geometry) {
-          throw new Error(
-            "Please select a valid location from the suggestions"
-          );
+          throw new Error("Please select a valid location from the suggestions");
         }
 
         const location = {
@@ -343,13 +428,12 @@ export default function FuelDeliverySystem() {
           longitude: place.geometry.location.lng(),
         };
         setSelectedLocation(location);
+        setDeliveryCoordinates(location);
         setAddress(place.formatted_address);
 
         // Fetch nearby fuel pumps
         const response = await fetch(
-          `${
-            import.meta.env.VITE_API_URL
-          }/fuel-orders/nearby-pumps?location=${JSON.stringify(
+          `${import.meta.env.VITE_API_URL}/fuel-orders/nearby-pumps?location=${JSON.stringify(
             location
           )}&radius=10000`,
           {
@@ -364,12 +448,9 @@ export default function FuelDeliverySystem() {
         }
         const data = await response.json();
 
-        console.log(data);
-
         if (!data.success) {
           throw new Error(data.message || "Failed to fetch nearby fuel pumps");
         }
-        console.log(data.data);
         setNearbyPumps(data.data);
       } catch (error) {
         console.error("Error:", error);
@@ -381,7 +462,52 @@ export default function FuelDeliverySystem() {
     }
   };
 
-  // Step 3: Payment Method
+  // Skeleton loading component
+  const PriceSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+      <div className="space-y-3">
+        <div className="h-3 bg-gray-200 rounded"></div>
+        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+        <div className="h-3 bg-gray-200 rounded w-4/6"></div>
+      </div>
+    </div>
+  );
+
+  // Skeleton loading component for the entire form
+  const FormSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="border rounded-lg p-4">
+            <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-8 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="h-10 bg-gray-200 rounded w-full mb-6"></div>
+      
+      <div className="space-y-4 mb-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="border rounded-lg p-4">
+            <div className="flex">
+              <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
+              <div className="flex-1 ml-4">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Update the payment step render function to show skeleton loading for price calculations
   const renderPaymentStep = () => {
     return (
       <div>
@@ -462,23 +588,65 @@ export default function FuelDeliverySystem() {
         </div>
 
         <div className="mt-8">
-          <div className="flex justify-between py-2 border-t border-gray-200">
-            <span className="text-gray-600">Subtotal</span>
-            <span className="font-medium">
-              Rs. {calculateSubtotal().toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between py-2 border-t border-gray-200">
-            <span className="text-gray-600">Delivery Fee</span>
-            <span className="font-medium">Rs. {getDeliveryFee().toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between py-2 border-t border-b border-gray-200">
-            <span className="font-bold">Total</span>
-            <span className="font-bold text-red-600">
-              Rs. {calculateTotal().toFixed(2)}
-            </span>
-          </div>
+          {loadingPrices || isCalculatingFare ? (
+            // Skeleton loading for price breakdown
+            <div className="space-y-4">
+              <div className="animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+              <div className="animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+              </div>
+              <div className="animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+              <div className="border-t border-gray-200 pt-4">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Actual price breakdown
+            <>
+              <div className="flex justify-between py-2 border-t border-gray-200">
+                <span className="text-gray-600">Fuel Price</span>
+                <span className="font-medium">Rs. {getCurrentFuelPrice().toFixed(2)}/liter</span>
+              </div>
+              <div className="flex justify-between py-2 border-t border-gray-200">
+                <span className="text-gray-600">Quantity</span>
+                <span className="font-medium">{quantity} liters</span>
+              </div>
+              <div className="flex justify-between py-2 border-t border-gray-200">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium">Rs. {calculateSubtotal().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-t border-gray-200">
+                <span className="text-gray-600">Delivery Fee</span>
+                <span className="font-medium">Rs. {getDeliveryFee().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-2 border-t border-b border-gray-200">
+                <span className="font-bold">Total</span>
+                <span className="font-bold text-red-600">Rs. {calculateTotal().toFixed(2)}</span>
+              </div>
+            </>
+          )}
         </div>
+
+        {priceError && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm">{priceError}</p>
+            <button
+              onClick={fetchPrices}
+              className="mt-2 text-sm text-red-600 hover:text-red-700 underline"
+            >
+              Retry loading prices
+            </button>
+          </div>
+        )}
 
         <div className="flex justify-between mt-6">
           <button
@@ -491,9 +659,9 @@ export default function FuelDeliverySystem() {
           </button>
           <button
             onClick={createOrder}
-            disabled={isCreatingOrder}
+            disabled={isCreatingOrder || loadingPrices}
             className={`py-3 px-6 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center ${
-              isCreatingOrder ? "opacity-50 cursor-not-allowed" : ""
+              (isCreatingOrder || loadingPrices) ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {isCreatingOrder ? (
@@ -501,6 +669,8 @@ export default function FuelDeliverySystem() {
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 Creating Order...
               </>
+            ) : loadingPrices ? (
+              "Loading Prices..."
             ) : (
               <>
                 Place Order
@@ -514,6 +684,312 @@ export default function FuelDeliverySystem() {
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm">{orderError}</p>
           </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render fuel selection step
+  const renderFuelSelection = () => {
+    return (
+      <div>
+        <h3 className="font-bold text-lg text-gray-800 mb-4">Select Fuel Type and Quantity</h3>
+
+        {/* Fuel Type Selection */}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Fuel Type
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {['Regular', 'Premium', 'Diesel'].map((type) => (
+              <div
+                key={type}
+                className={`border rounded-lg p-4 cursor-pointer transition ${
+                  fuelType === type
+                    ? 'border-red-600 bg-red-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setFuelType(type)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Fuel
+                      size={20}
+                      className={`mr-2 ${
+                        fuelType === type ? 'text-red-600' : 'text-gray-400'
+                      }`}
+                    />
+                    <span className="font-medium">{type}</span>
+                  </div>
+                  <div
+                    className={`w-4 h-4 rounded-full border ${
+                      fuelType === type
+                        ? 'border-red-600 bg-red-600'
+                        : 'border-gray-300'
+                    }`}
+                  >
+                    {fuelType === type && (
+                      <div className="w-2 h-2 bg-white rounded-full m-auto mt-1"></div>
+                    )}
+                  </div>
+                </div>
+                {loadingPrices ? (
+                  <div className="mt-2 h-4 bg-gray-200 rounded animate-pulse"></div>
+                ) : (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Rs. {fuelPrices[type]?.pricePerLiter.toFixed(2)}/liter
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quantity Selection */}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Quantity (Liters)
+          </label>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setQuantity(Math.max(5, quantity - 5))}
+              className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 transition"
+              type="button"
+            >
+              <ChevronLeft size={20} className="text-gray-600" />
+            </button>
+            <input
+              type="number"
+              min="5"
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(5, parseInt(e.target.value) || 5))}
+              className="block w-24 text-center border-gray-200 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+            />
+            <button
+              onClick={() => setQuantity(quantity + 5)}
+              className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 transition"
+              type="button"
+            >
+              <ChevronRight size={20} className="text-gray-600" />
+            </button>
+          </div>
+          <p className="mt-2 text-sm text-gray-500">Minimum order: 5 liters</p>
+        </div>
+
+        {/* Price Summary */}
+        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-600">Price per liter</span>
+            <span className="font-medium">
+              {loadingPrices ? (
+                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse inline-block"></div>
+              ) : (
+                `Rs. ${getCurrentFuelPrice().toFixed(2)}`
+              )}
+            </span>
+          </div>
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-600">Quantity</span>
+            <span className="font-medium">{quantity} liters</span>
+          </div>
+          <div className="flex justify-between pt-2 border-t border-gray-200">
+            <span className="font-medium">Subtotal</span>
+            <span className="font-medium text-red-600">
+              {loadingPrices ? (
+                <div className="h-4 w-20 bg-gray-200 rounded animate-pulse inline-block"></div>
+              ) : (
+                `Rs. ${calculateSubtotal().toFixed(2)}`
+              )}
+            </span>
+          </div>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setActiveStep(2)}
+            disabled={loadingPrices}
+            className={`py-3 px-6 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center ${
+              loadingPrices ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            Next Step
+            <ChevronRight size={20} className="ml-2" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render delivery location step
+  const renderDeliveryLocation = () => {
+    return (
+      <div>
+        <h3 className="font-bold text-lg text-gray-800 mb-4">Select Delivery Location</h3>
+
+        {/* Location Search */}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            Delivery Address
+          </label>
+          {isGoogleMapsLoaded ? (
+            <Autocomplete
+              onLoad={autocomplete => setSearchBox(autocomplete)}
+              onPlaceChanged={onPlaceSelected}
+            >
+              <input
+                type="text"
+                placeholder="Enter your delivery address"
+                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-red-500 focus:border-red-500"
+              />
+            </Autocomplete>
+          ) : (
+            <div className="animate-pulse">
+              <div className="h-10 bg-gray-200 rounded w-full"></div>
+            </div>
+          )}
+          {searchError && (
+            <p className="mt-2 text-sm text-red-600">{searchError}</p>
+          )}
+        </div>
+
+        {/* Nearby Fuel Pumps */}
+        <div className="mb-6">
+          <h4 className="font-medium text-gray-800 mb-3">Nearby Fuel Pumps</h4>
+          {isLoadingPumps ? (
+            // Skeleton loading for pumps
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="border rounded-lg p-4">
+                  <div className="animate-pulse flex space-x-4">
+                    <div className="rounded-full bg-gray-200 h-12 w-12"></div>
+                    <div className="flex-1 space-y-4 py-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded"></div>
+                        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : nearbyPumps.length > 0 ? (
+            <div className="space-y-4">
+              {nearbyPumps.map((pump) => (
+                <div
+                  key={pump._id}
+                  className={`border rounded-lg p-4 cursor-pointer transition ${
+                    pumpId === pump._id
+                      ? 'border-red-600 bg-red-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => pumpSelected(
+                    pump._id, 
+                    pump.location.address,
+                    {
+                      latitude: pump.location.coordinates[1],
+                      longitude: pump.location.coordinates[0]
+                    }
+                  )}
+                >
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                        <Fuel className="w-6 h-6 text-gray-500" />
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <h5 className="font-medium text-gray-900">{pump.name}</h5>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {pump.location.address}
+                      </p>
+                      <div className="mt-2 flex items-center text-sm text-gray-500">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        <span>{(pump.distance / 1000).toFixed(1)} km away</span>
+                      </div>
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded-full border ${
+                        pumpId === pump._id
+                          ? 'border-red-600 bg-red-600'
+                          : 'border-gray-300'
+                      }`}
+                    >
+                      {pumpId === pump._id && (
+                        <div className="w-2 h-2 bg-white rounded-full m-auto mt-1"></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : selectedLocation ? (
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <Fuel className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600">No fuel pumps found nearby.</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Try searching in a different area
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600">Enter your delivery address</p>
+              <p className="text-sm text-gray-500 mt-1">
+                to see nearby fuel pumps
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Selected Location Summary */}
+        {selectedLocation && address && (
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="flex items-start">
+              <MapPin className="w-5 h-5 text-red-600 mt-1 flex-shrink-0" />
+              <div className="ml-3">
+                <h5 className="font-medium text-gray-900">Delivery Location</h5>
+                <p className="text-sm text-gray-600 mt-1">{address}</p>
+                {selectedPumpAddress && (
+                  <>
+                    <h5 className="font-medium text-gray-900 mt-3">Selected Pump</h5>
+                    <p className="text-sm text-gray-600 mt-1">{selectedPumpAddress}</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between">
+          <button
+            onClick={() => setActiveStep(1)}
+            className="py-3 px-6 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition flex items-center"
+          >
+            <ChevronLeft size={20} className="mr-2" />
+            Back
+          </button>
+          <button
+            onClick={() => setActiveStep(3)}
+            disabled={!selectedLocation || !address || !pumpId}
+            className={`py-3 px-6 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center ${
+              !selectedLocation || !address || !pumpId
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
+            }`}
+          >
+            Next Step
+            <ChevronRight size={20} className="ml-2" />
+          </button>
+        </div>
+
+        {/* Error Message */}
+        {!selectedLocation && (
+          <p className="mt-4 text-sm text-red-600">
+            Please select a delivery location to continue
+          </p>
         )}
       </div>
     );
@@ -1011,14 +1487,20 @@ export default function FuelDeliverySystem() {
                   </div>
                 </div>
 
-                {/* Step 1: Fuel Selection */}
-                {activeStep === 1 && renderFuelSelection()}
+                {isPageLoading ? (
+                  <FormSkeleton />
+                ) : (
+                  <>
+                    {/* Step 1: Fuel Selection */}
+                    {activeStep === 1 && renderFuelSelection()}
 
-                {/* Step 2: Delivery Location */}
-                {activeStep === 2 && renderDeliveryLocation()}
+                    {/* Step 2: Delivery Location */}
+                    {activeStep === 2 && renderDeliveryLocation()}
 
-                {/* Step 3: Payment */}
-                {activeStep === 3 && renderPaymentStep()}
+                    {/* Step 3: Payment */}
+                    {activeStep === 3 && renderPaymentStep()}
+                  </>
+                )}
               </div>
 
               {/* Additional Info */}

@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const FuelPriceController = require('../controllers/fuelPrice.controller');
-const { adminMiddleware, authUser } = require('../middlewares/auth.middleware');
+const fuelPriceController = require('../controllers/fuelPrice.controller');
 
 // Public routes
-router.get('/', FuelPriceController.getAllPrices);
-router.get('/:fuelType', FuelPriceController.getPriceByType);
-// Making update route public too (for demo purposes)
-router.put('/update', FuelPriceController.updatePrice);
+router.get('/', fuelPriceController.getAllPrices);
+router.get('/:fuelType', fuelPriceController.getPriceByType);
+
+// Admin route for updating prices
+router.put('/update', fuelPriceController.updatePrice);
 
 module.exports = router; 
