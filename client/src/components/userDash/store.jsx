@@ -402,7 +402,7 @@ export default function SparePartsStore() {
           />
 
           {/* Products Grid */}
-          <div className="md:w-3/4">
+          <div id="product-list" className="md:w-3/4">
             {/* Results summary & Items per page selector */}
             <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center">
               <div className="mb-2 sm:mb-0">
