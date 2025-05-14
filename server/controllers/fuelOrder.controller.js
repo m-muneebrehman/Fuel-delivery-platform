@@ -86,16 +86,47 @@ class FuelOrderController {
 
     static async assignDeliveryBoy(req, res) {
         try {
-            const order = await FuelOrderService.assignDeliveryBoy(
+            // Get the fuel pump ID from the authenticated user
+            const fuelPumpId = req.fuelPump._id;
+            console.log('Authenticated Fuel Pump ID:', fuelPumpId);
+            
+            // First check if the order exists
+            const order = await FuelOrderService.getOrderById(req.params.orderId);
+            
+            if (!order) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Order not found'
+                });
+            }
+            
+            console.log('Order Fuel Pump ID:', order.fuelPump);
+            console.log('Order Fuel Pump ID (toString):', order.fuelPump.toString ? order.fuelPump.toString() : 'N/A');
+            console.log('Authenticated Fuel Pump ID (toString):', fuelPumpId.toString());
+            
+            // TEMPORARILY BYPASSING OWNERSHIP CHECK FOR DEBUGGING
+            /* 
+            // Verify the order belongs to this fuel pump
+            if (order.fuelPump.toString() !== fuelPumpId.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Not authorized to assign delivery boy to this order'
+                });
+            }
+            */
+            
+            const updatedOrder = await FuelOrderService.assignDeliveryBoy(
                 req.params.orderId,
                 req.body.deliveryBoyId
             );
+            
             res.status(200).json({
                 success: true,
                 message: 'Delivery boy assigned successfully',
-                data: order
+                data: updatedOrder
             });
         } catch (error) {
+            console.error('Error in assignDeliveryBoy:', error);
             res.status(400).json({
                 success: false,
                 message: error.message

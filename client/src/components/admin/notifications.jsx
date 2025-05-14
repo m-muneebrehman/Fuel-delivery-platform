@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Users, Check, X, ChevronDown, Eye, ArrowLeft, Filter } from 'lucide-react';
+import { MapPin, Users, Check, X, ChevronDown, Eye, ArrowLeft, Filter} from 'lucide-react';
 import { Link } from 'react-router-dom'; // Assuming you're using React Router
 import RequestCard from './requestCard'; // Import your RequestCard component
 import RequestDetailsModal from './detailModal' // Import your RequestDetailsModal component
 
 export default function NotificationsPage() {
-  const [requestStatus, setRequestStatus] = useState('all');
   const [requestType, setRequestType] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [requests, setRequests] = useState([]);
@@ -19,24 +18,25 @@ export default function NotificationsPage() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/fuelpumps/requests`,
+        // Fetch fuel pump requests
+        const pumpResponse = await fetch(`${import.meta.env.VITE_API_URL}/fuelpumps/requests`,
           {
             method: 'GET'
           }
         );
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch requests');
+        if (!pumpResponse.ok) {
+          throw new Error('Failed to fetch pump requests');
         }
 
-        const data = await response.json();
+        const pumpData = await pumpResponse.json();
         
-        if (!data.success) {
-          throw new Error(data.message || 'Failed to fetch requests');
+        if (!pumpData.success) {
+          throw new Error(pumpData.message || 'Failed to fetch pump requests');
         }
 
-        // Transform the data to match our component's structure
-        const transformedRequests = data.data.map(pump => ({
+        // Transform pump data
+        const transformedPumpRequests = pumpData.data.map(pump => ({
           id: pump._id,
           type: "petrol_pump",
           name: pump.name,
@@ -54,7 +54,43 @@ export default function NotificationsPage() {
           additionalInfo: pump.additionalInfo || {}
         }));
 
-        setRequests(transformedRequests);
+        // Fetch delivery boy requests
+        const deliveryBoyResponse = await fetch(`${import.meta.env.VITE_API_URL}/deliveryboys/unverified`,
+          {
+            method: 'GET'
+          }
+        );
+
+        if (!deliveryBoyResponse.ok) {
+          throw new Error('Failed to fetch delivery boy requests');
+        }
+
+        const deliveryBoyData = await deliveryBoyResponse.json();
+        
+        if (!deliveryBoyData.success) {
+          throw new Error(deliveryBoyData.message || 'Failed to fetch delivery boy requests');
+        }
+
+        // Transform delivery boy data
+        const transformedDeliveryBoyRequests = deliveryBoyData.data.map(boy => ({
+          id: boy._id,
+          type: "delivery_boy",
+          name: boy.fullName,
+          location: boy.address,
+          requestDate: boy.createdAt,
+          status: boy.status || 'pending',
+          documents: [],
+          photo: boy.photo,
+          contactInfo: {
+            phone: boy.phoneNumber,
+            email: boy.email,
+            cnic: boy.cnicNumber
+          },
+          fuelPump: boy.fuelPump
+        }));
+
+        // Combine both types of requests
+        setRequests([...transformedPumpRequests, ...transformedDeliveryBoyRequests]);
       } catch (error) {
         console.error('Error fetching requests:', error);
         setError(error.message);
@@ -66,31 +102,40 @@ export default function NotificationsPage() {
     fetchRequests();
   }, []);
   
-  // Filter requests based on status and type
+  // Filter requests based on type only
   const filteredRequests = requests.filter(request => {
-    const matchesType = requestType === 'all' || request.type === requestType;
-    const matchesStatus = requestStatus === 'all' || request.status === requestStatus;
-    return matchesType && matchesStatus;
+    return requestType === 'all' || request.type === requestType;
   });
   
   // Handle request actions
   const handleApproveRequest = async (request) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/fuelpumps/${request.id}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      let response;
+      
+      if (request.type === "petrol_pump") {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/fuelpumps/${request.id}/approve`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } else if (request.type === "delivery_boy") {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/deliveryboys/${request.id}/verify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
 
       if (!response.ok) {
-        throw new Error('Failed to approve request');
+        throw new Error(`Failed to approve ${request.type} request`);
       }
 
       const data = await response.json();
       
       if (!data.success) {
-        throw new Error(data.message || 'Failed to approve request');
+        throw new Error(data.message || `Failed to approve ${request.type} request`);
       }
 
       // Update the request status in the local state
@@ -110,21 +155,32 @@ export default function NotificationsPage() {
   
   const handleRejectRequest = async (request) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/fuelpumps/${request.id}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      let response;
+      
+      if (request.type === "petrol_pump") {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/fuelpumps/${request.id}/reject`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } else if (request.type === "delivery_boy") {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/deliveryboys/${request.id}/reject`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
 
       if (!response.ok) {
-        throw new Error('Failed to reject request');
+        throw new Error(`Failed to reject ${request.type} request`);
       }
 
       const data = await response.json();
       
       if (!data.success) {
-        throw new Error(data.message || 'Failed to reject request');
+        throw new Error(data.message || `Failed to reject ${request.type} request`);
       }
 
       // Update the request status in the local state
@@ -177,22 +233,6 @@ export default function NotificationsPage() {
                     <option value="all">All Types</option>
                     <option value="petrol_pump">Petrol Pumps</option>
                     <option value="delivery_boy">Delivery Staff</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <ChevronDown size={16} className="text-gray-400" />
-                  </div>
-                </div>
-                
-                <div className="relative">
-                  <select
-                    className="appearance-none block w-full pl-3 pr-8 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={requestStatus}
-                    onChange={(e) => setRequestStatus(e.target.value)}
-                  >
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                     <ChevronDown size={16} className="text-gray-400" />

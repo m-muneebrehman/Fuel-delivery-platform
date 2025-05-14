@@ -19,6 +19,8 @@ router.post('/login', [
 ],
     fuelPumpController.loginFuelPump);
 
+router.get('/myDeliveryBoys',authMiddleware.authFuelPump,fuelPumpController.getMyDeliveryBoys);
+
 
 router.get('/profile', authMiddleware.authFuelPump, fuelPumpController.getFuelPumpProfile);
 
@@ -28,5 +30,7 @@ router.get('/logout', authMiddleware.authFuelPump, fuelPumpController.logoutFuel
 router.get('/requests', fuelPumpController.getFuelPumpRequests);
 router.post('/:id/approve', fuelPumpController.approveFuelPump);
 router.post('/:id/reject', fuelPumpController.rejectFuelPump);
+
+
 
 module.exports = router;

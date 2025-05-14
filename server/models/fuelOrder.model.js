@@ -12,7 +12,7 @@ const fuelOrderSchema = new mongoose.Schema({
   },
   fuelPump: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'FuelPump',
+    ref: 'fuelPump',
     required: true
   },
   deliveryBoy: {

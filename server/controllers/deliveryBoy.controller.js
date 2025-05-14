@@ -4,6 +4,7 @@ const deliveryBoyModel = require("../models/deliveryBoy.model");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const blacklistTokenModel = require("../models/blacklistToken.model");
 
 // Create 'uploads' directory if it doesn't exist
 const uploadDir = path.join(__dirname, "..", "uploads");
@@ -170,7 +171,6 @@ module.exports.statusChange = async (req, res, next) => {
     }
 };
 
-
 module.exports.logoutDeliveryBoy = async (req, res, next) => {
   const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
@@ -178,4 +178,90 @@ module.exports.logoutDeliveryBoy = async (req, res, next) => {
 
   res.clearCookie("token");
   res.status(200).json({ message: "Logged out successfully" });
+};
+
+// Get unverified delivery boys
+module.exports.getUnverifiedDeliveryBoys = async (req, res) => {
+  try {
+    // Get all unverified delivery boys
+    const unverifiedDeliveryBoys = await deliveryBoyModel.find({ isVerified: false })
+      .populate('fuelPump', 'name location');
+
+    return res.status(200).json({
+      success: true,
+      message: "Unverified delivery boys retrieved successfully",
+      data: unverifiedDeliveryBoys
+    });
+  } catch (error) {
+    console.error("Error getting unverified delivery boys:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+// Verify a delivery boy
+module.exports.verifyDeliveryBoy = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deliveryBoy = await deliveryBoyModel.findByIdAndUpdate(
+      id,
+      { isVerified: true },
+      { new: true }
+    );
+
+    if (!deliveryBoy) {
+      return res.status(404).json({
+        success: false,
+        message: "Delivery boy not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Delivery boy verified successfully",
+      data: deliveryBoy
+    });
+  } catch (error) {
+    console.error("Error verifying delivery boy:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
+// Reject a delivery boy
+module.exports.rejectDeliveryBoy = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // For rejection, you might want to either delete the record or keep it with a rejected status
+    const deliveryBoy = await deliveryBoyModel.findByIdAndUpdate(
+      id,
+      { isVerified: false, status: 'rejected' },
+      { new: true }
+    );
+
+    if (!deliveryBoy) {
+      return res.status(404).json({
+        success: false,
+        message: "Delivery boy not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Delivery boy rejected successfully",
+      data: deliveryBoy
+    });
+  } catch (error) {
+    console.error("Error rejecting delivery boy:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 };

@@ -19,6 +19,6 @@ router.post('/:orderId/cancel', authUser, FuelOrderController.cancelOrder);
 // fuel pump owner routes
 router.get('/status/:status', authUser, adminMiddleware, FuelOrderController.getOrdersByStatus);
 router.put('/:orderId/status', authUser, adminMiddleware, FuelOrderController.updateOrderStatus);
-router.put('/:orderId/assign-delivery', authUser, adminMiddleware, FuelOrderController.assignDeliveryBoy);
+router.put('/:orderId/assign-delivery', authFuelPump, FuelOrderController.assignDeliveryBoy);
 
 module.exports = router;  

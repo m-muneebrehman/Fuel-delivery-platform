@@ -6,13 +6,26 @@ const jwt = require("jsonwebtoken");
 const blacklistTokenModel = require("../models/blacklistToken.model");
 
 const extractToken = (req) => {
-    return req.cookies.token || 
-           req.headers.authorization?.split(" ")[1] || 
-           req.query.token;
+    const tokenFromCookie = req.cookies?.token;
+    const tokenFromHeader = req.headers.authorization?.split(" ")[1];
+    const tokenFromQuery = req.query?.token;
+    
+    const token = tokenFromCookie || tokenFromHeader || tokenFromQuery;
+    
+    if (token) {
+        console.log("Token found:", token.substring(0, 15) + "...");
+    } else {
+        console.log("No token found in request");
+    }
+    
+    return token;
 };
 
 const isTokenBlacklisted = async (token) => {
     const blacklisted = await blacklistTokenModel.findOne({ token });
+    if (blacklisted) {
+        console.log("Token is blacklisted");
+    }
     return !!blacklisted;
 };
 
@@ -34,35 +47,44 @@ const createAuthMiddleware = (model, userType) => {
                 });
             }
 
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await model.findById(decoded._id);
-
-            console.log(token);
-
-            console.log(user);
-            
-            if (!user) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                console.log("Token decoded successfully:", decoded);
+                
+                const user = await model.findById(decoded._id);
+                
+                if (!user) {
+                    console.log("User not found with ID:", decoded._id);
+                    return res.status(401).json({
+                        success: false,
+                        message: "User not found"
+                    });
+                }
+                
+                console.log(`${userType} authenticated:`, user._id);
+                req[userType] = user;
+                req.user = user;
+                next();
+            } catch (jwtError) {
+                console.error("JWT verification error:", jwtError.name, jwtError.message);
+                
+                if (jwtError.name === 'TokenExpiredError') {
+                    return res.status(401).json({
+                        success: false,
+                        message: "Token has expired"
+                    });
+                }
+                
                 return res.status(401).json({
                     success: false,
-                    message: "User not found"
+                    message: "Invalid authentication token"
                 });
             }
-
-            
-
-            req[userType] = user;
-            req.user = user; // ✅ add this line
-            next();
         } catch (error) {
-            if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({
-                    success: false,
-                    message: "Token has expired"
-                });
-            }
-            return res.status(401).json({
+            console.error("Authentication middleware error:", error);
+            return res.status(500).json({
                 success: false,
-                message: "Invalid authentication token"
+                message: "Server error during authentication"
             });
         }
     };

@@ -4,6 +4,7 @@ const fuelPumpModel = require("../models/fuelPump.model");
 const blacklistTokenModel = require("../models/blacklistToken.model");
 const mapsService = require("../services/maps.service")
 const jwt = require("jsonwebtoken");
+const DeliveryBoyModel = require("../models/deliveryBoy.model");
 
 module.exports.registerFuelPump = async (req, res, next) => {
     const errors = validationResult(req);
@@ -57,9 +58,9 @@ module.exports.loginFuelPump = async (req, res, next) => {
     if(!isMatch) {
         return res.status(401).json({ message: "Invalid email or password" });
     }
-    // Generate JWT token
+    // Generate JWT token with longer expiration
     const token = jwt.sign({ _id: fuelPump._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
+        expiresIn: "7d", // Changed from 1d to 7d
       });
     // Return only necessary data and token
     res.status(200).json({
@@ -132,6 +133,35 @@ module.exports.rejectFuelPump = async (req, res) => {
         res.status(400).json({
             success: false,
             message: error.message
+        });
+    }
+};
+
+/**
+ * Get all delivery boys associated with the authenticated fuel pump
+ */
+module.exports.getMyDeliveryBoys = async (req, res) => {
+    try {
+        // Get the fuel pump ID from the authenticated user
+        const fuelPumpId = req.fuelPump._id;
+        
+        // Find all available delivery boys associated with this fuel pump
+        const deliveryBoys = await DeliveryBoyModel.find({ 
+            fuelPump: fuelPumpId,
+            status: 'available'  // Only get available delivery boys
+        }).select('-password');
+        
+        res.status(200).json({
+            success: true,
+            count: deliveryBoys.length,
+            data: deliveryBoys
+        });
+    } catch (error) {
+        console.error('Error fetching delivery boys:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching delivery boys',
+            error: error.message
         });
     }
 };

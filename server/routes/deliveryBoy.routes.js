@@ -33,8 +33,12 @@ router.post('/login',[
 
 router.put('/statusChange', deliveryBoyController.statusChange);
 
-
 router.get('/logout',authMiddleware.authDeliveryBoy, deliveryBoyController.logoutDeliveryBoy);
+
+// New routes for handling delivery boy requests - similar to fuel pump routes
+router.get('/unverified', deliveryBoyController.getUnverifiedDeliveryBoys);
+router.post('/:id/verify', deliveryBoyController.verifyDeliveryBoy);
+router.post('/:id/reject', deliveryBoyController.rejectDeliveryBoy);
 
 module.exports = router;
 
