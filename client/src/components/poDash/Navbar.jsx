@@ -41,7 +41,6 @@ export const Navbar = () => {
       return {
         height: "h-20",
         background: "backdrop-blur-xl bg-gradient-to-r from-gray-900/90 via-gray-800/90 to-gray-900/90",
-        marginTop: "mt-8",
       };
     }
     // First scroll threshold
@@ -49,7 +48,6 @@ export const Navbar = () => {
       return {
         height: "h-16",
         background: "backdrop-blur-xl bg-gradient-to-r from-gray-900/95 via-gray-800/95 to-gray-900/95",
-        marginTop: "mt-4",
       };
     }
     // Further scrolling
@@ -57,21 +55,20 @@ export const Navbar = () => {
       return {
         height: "h-16",
         background: "backdrop-blur-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900",
-        marginTop: "mt-2",
       };
     }
   };
 
-  const { height, background, marginTop } = getNavbarStyle();
+  const { height, background } = getNavbarStyle();
 
   return (
     <header className="w-full z-40 fixed top-0 left-0 bg-transparent">
       <div 
-        className={`mx-15 px-4 md:px-6 lg:px-8 ${marginTop} rounded-2xl ${background} text-white shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] transition-all duration-500 ease-in-out border border-white/10 hover:border-white/20`}
+        className={`max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-2 rounded-b-2xl ${background} text-white shadow-[0_8px_32px_0_rgba(31,38,135,0.18)] transition-all duration-500 ease-in-out border-b border-white/10 hover:border-white/20`}
       >
         <div className={`flex items-center justify-between ${height} px-2 md:px-4 transition-all duration-500`}>
           {/* Logo aligned flush to the left */}
-          <div className="flex items-center transition-all duration-500">
+          <div className="flex items-center h-full transition-all duration-500">
             <Logo />
           </div>
 
