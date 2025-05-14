@@ -111,8 +111,8 @@ function Products() {
       {/* Products Section */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-            <Package className="mr-2 text-red-600" size={24} />
+          <h2 className="text-2xl font-extrabold text-blue-900 dark:text-blue-100 flex items-center">
+            <Package className="mr-2 text-blue-500" size={24} />
             Products
           </h2>
         </div>
@@ -197,15 +197,15 @@ function Products() {
         )}
 
         {/* Products Table */}
-        <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-red-100">
+        <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-blue-100 dark:border-blue-900">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-red-50">
+            <table className="min-w-full divide-y divide-blue-200 dark:divide-blue-900">
+              <thead className="bg-blue-50 dark:bg-blue-900/60">
                 <tr>
                   <th
                     onClick={() => requestProductSort("id")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200"
+                    className="px-6 py-3 text-left text-xs font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       ID
@@ -218,7 +218,7 @@ function Products() {
                   <th
                     onClick={() => requestProductSort("name")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200"
+                    className="px-6 py-3 text-left text-xs font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Product
@@ -231,7 +231,7 @@ function Products() {
                   <th
                     onClick={() => requestProductSort("category")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200 hidden md:table-cell"
+                    className="px-6 py-3 text-left text-xs font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200 hidden md:table-cell"
                   >
                     <div className="flex items-center">
                       Category
@@ -244,7 +244,7 @@ function Products() {
                   <th
                     onClick={() => requestProductSort("price")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200"
+                    className="px-6 py-3 text-left text-xs font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Price
@@ -257,7 +257,7 @@ function Products() {
                   <th
                     onClick={() => requestProductSort("stock")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200 hidden sm:table-cell"
+                    className="px-6 py-3 text-left text-xs font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200 hidden sm:table-cell"
                   >
                     <div className="flex items-center">
                       Stock
@@ -270,7 +270,7 @@ function Products() {
                   <th
                     onClick={() => requestProductSort("availability")}
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-red-700 uppercase tracking-wider cursor-pointer hover:bg-red-100 transition duration-200"
+                    className="px-6 py-3 text-left text-xs font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wider cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/80 transition duration-200"
                   >
                     <div className="flex items-center">
                       Status
@@ -282,33 +282,33 @@ function Products() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-red-700 uppercase tracking-wider"
+                    className="px-6 py-3 text-right text-xs font-bold text-blue-700 dark:text-blue-200 uppercase tracking-wider"
                   >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-red-100">
+              <tbody className="bg-white dark:bg-gray-900 divide-y divide-blue-100 dark:divide-blue-900">
                 {sortedProducts.map((product, idx) => (
                   <tr
                     key={product.id}
-                    className={`hover:bg-red-50 transition duration-150 ${
-                      idx % 2 === 0 ? "bg-white" : "bg-red-50/30"
+                    className={`hover:bg-blue-50 dark:hover:bg-blue-900/40 transition duration-150 ${
+                      idx % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-blue-50/40 dark:bg-blue-900/30"
                     }`}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       #{product.id}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200">
                       {product.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden md:table-cell">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200 hidden md:table-cell">
                       {product.category}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {product.price}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 hidden sm:table-cell">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200 hidden sm:table-cell">
                       {product.stock === 0 ? (
                         <span className="text-red-500 font-medium">
                           Out of stock
@@ -333,7 +333,7 @@ function Products() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-indigo-100 hover:text-indigo-900 mr-3 transition duration-200">
+                      <button className="text-indigo-500 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100 mr-3 transition duration-200">
                         <Edit size={16} />
                       </button>
                       <button className="text-red-500 hover:text-red-700 transition duration-200">
@@ -345,7 +345,7 @@ function Products() {
               </tbody>
             </table>
           </div>
-          <div className="bg-gray-50 px-4 py-3 text-sm text-gray-700 border-t border-red-100">
+          <div className="bg-blue-50 dark:bg-blue-900/60 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 border-t border-blue-100 dark:border-blue-900">
             Showing {productData.length} products
           </div>
         </div>
