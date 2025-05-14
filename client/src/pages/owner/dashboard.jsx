@@ -6,15 +6,17 @@ import Orders from '@/components/poDash/Orders'
 export default function OrdersProductsPage() {
 
   return (
-    <div className="w-screen min-h-screen bg-gray-50">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#e0e7ff] via-[#f5f7fa] to-[#c7d2fe] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-x-hidden">
+      {/* Decorative background shapes removed for performance */}
       <Navbar />
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-50 px-4 sm:px-6 lg:px-8">
-        {/* Orders Section */}
-        <Orders />
-        
-        {/* Products Section */}
-        <Products />
+      <main className="relative z-10 container mx-auto px-4 py-20 md:py-28">
+        <div className="bg-white/90 dark:bg-gray-900/80 rounded-3xl shadow-2xl p-8 border border-gray-200 dark:border-gray-800 backdrop-blur-md">
+          {/* Orders Section */}
+          <Orders />
+          {/* Products Section */}
+          <Products />
+        </div>
       </main>
     </div>
   );

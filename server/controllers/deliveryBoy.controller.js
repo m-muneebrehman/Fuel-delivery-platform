@@ -91,12 +91,6 @@ module.exports.registerDeliveryBoy = async (req, res, next) => {
 };
 
 module.exports.loginDeliveryBoy = async (req, res, next) => {
-  const errors = validationResult(req);
-
-  if (!errors) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   const { email, password } = req.body;
 
   const deliveryBoy = await deliveryBoyModel
@@ -117,8 +111,11 @@ module.exports.loginDeliveryBoy = async (req, res, next) => {
 
   res.cookie("token", token);
 
-  res.status(200).json({ token, deliveryBoy });
+  const { password: _, ...safeDeliveryBoy } = deliveryBoy.toObject();
+
+  res.status(200).json({ token, data: safeDeliveryBoy });
 };
+
 
 module.exports.getAllDeliveryBoys = async (req, res, next) => {
   const { pumpId } = req.query;

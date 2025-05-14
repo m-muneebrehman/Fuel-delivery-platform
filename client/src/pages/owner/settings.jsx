@@ -383,88 +383,85 @@ export default function DeliveryBoyManagement() {
   const verifiedBoys = deliveryBoys.filter((boy) => boy.isVerified).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 w-full">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#e0e7ff] via-[#f5f7fa] to-[#c7d2fe] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-x-hidden">
+      {/* Decorative background shapes */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-200 dark:bg-blue-900 rounded-full opacity-30 blur-3xl z-0 animate-pulse" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-200 dark:bg-purple-900 rounded-full opacity-30 blur-3xl z-0 animate-pulse" />
       {/* Header */}
       <Navbar />
-
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-24">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-8">
+      <main className="relative z-10 container mx-auto px-4 py-20 md:py-28">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 dark:text-white mb-10 tracking-tight drop-shadow-lg">
           Delivery Staff Management
         </h1>
-
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           <StatsCard
             title="Total Staff"
             value={deliveryBoys.length}
-            icon={<User className="text-blue-500" size={24} />}
+            icon={<User className="text-blue-500" size={28} />}
             color="blue"
           />
           <StatsCard
             title="Available Staff"
             value={availableBoys}
-            icon={<Check className="text-green-500" size={24} />}
+            icon={<Check className="text-green-500" size={28} />}
             color="green"
           />
           <StatsCard
             title="Busy Staff"
             value={deliveryBoys.length - availableBoys}
-            icon={<Clock className="text-orange-500" size={24} />}
+            icon={<Clock className="text-orange-500" size={28} />}
             color="orange"
           />
           <StatsCard
             title="Verified Staff"
             value={verifiedBoys}
-            icon={<ShieldCheck className="text-purple-500" size={24} />}
+            icon={<ShieldCheck className="text-purple-500" size={28} />}
             color="purple"
           />
         </div>
-
         {/* Delivery Boys Grid */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+        <div className="bg-white/90 dark:bg-gray-900/80 rounded-3xl shadow-2xl p-8 border border-gray-200 dark:border-gray-800 backdrop-blur-md">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white drop-shadow-sm">
               Delivery Staff
             </h2>
-
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
+              <div className="relative w-full sm:w-72">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-400" />
+                  <Search className="h-5 w-5 text-blue-400" />
                 </div>
                 <Input
                   type="text"
                   value={searchTerm}
                   onChange={handleSearchChange}
                   placeholder="Search staff..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  className="w-full pl-12 pr-4 py-2 bg-white/70 dark:bg-gray-800/70 border border-blue-200 dark:border-blue-700 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm text-white placeholder:text-blue-200 dark:placeholder:text-blue-300"
                 />
               </div>
-
               {/* Add Button */}
               <Button
                 type="button"
                 onClick={() => setShowAddModal(true)}
                 disabled={isLoading}
-                className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-sm hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                className="inline-flex items-center justify-center px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl shadow-lg hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400 transition-all duration-200 font-semibold text-base"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-5 w-5 mr-2" />
                 Add Staff
               </Button>
             </div>
           </div>
-
           {isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-300">
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-blue-400 mx-auto" />
+              <p className="mt-6 text-lg text-gray-600 dark:text-gray-300 font-medium">
                 Loading...
               </p>
             </div>
           ) : filteredBoys.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {filteredBoys.map((boy) => (
                 <DeliveryBoyCard
                   key={boy._id}
@@ -482,7 +479,6 @@ export default function DeliveryBoyManagement() {
           )}
         </div>
       </main>
-
       {/* Add Delivery Boy Modal */}
       {showAddModal && (
         <AddDeliveryBoyModal
@@ -498,7 +494,6 @@ export default function DeliveryBoyManagement() {
           isLoading={isLoading}
         />
       )}
-
       {/* Details Modal */}
       {showDetailsModal && (
         <DetailsModal
@@ -508,7 +503,6 @@ export default function DeliveryBoyManagement() {
           onConfirmDelete={setShowConfirmDelete}
         />
       )}
-
       {/* Confirm Delete Modal */}
       {showConfirmDelete && (
         <ConfirmDeleteModal
