@@ -26,10 +26,7 @@ router.get('/getDeliveryBoys', deliveryBoyController.getAllDeliveryBoys);
 
 router.delete('/delete', deliveryBoyController.deleteDeliveryBoy);
 
-router.post('/login',[
-    body('email').isEmail().withMessage('Invalid Email'),
-    body('password').isLength({min:5}).withMessage('Min length should be 6')
-],deliveryBoyController.loginDeliveryBoy);
+router.post('/login', deliveryBoyController.loginDeliveryBoy);
 
 router.put('/statusChange', deliveryBoyController.statusChange);
 
