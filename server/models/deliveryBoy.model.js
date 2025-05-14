@@ -53,10 +53,6 @@ const deliveryBoySchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
-    },
-    location:{
-      type:String,
-      default:""
     }
   },
   { timestamps: true }
