@@ -9,6 +9,7 @@ export const Navbar = () => {
   const navigationItems = [
     { title: "Home", href: "/admin" },
     { title: "Store", href: "/admin/store" },
+    { title: "Fuel Prices", href: "/admin/fuel-prices" },
     { title: "Notifications", href: "/admin/notifications" },
   ];
 

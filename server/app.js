@@ -13,6 +13,7 @@ const inventoryRoutes = require("./routes/inventory.routes");
 const orderRoutes = require('./routes/order.routes');
 const fuelOrderRoutes = require('./routes/fuelOrder.routes');
 const mapRoutes = require('./routes/maps.routes')
+const fuelPriceRoutes = require('./routes/fuelPrice.routes');
 
 app.use(
   cors({
@@ -38,5 +39,6 @@ app.use("/inventory", inventoryRoutes);
 app.use('/maps',mapRoutes);
 app.use('/orders',orderRoutes)
 app.use('/fuel-orders',fuelOrderRoutes)
+app.use('/fuel-prices', fuelPriceRoutes);
 
 module.exports = app;

@@ -36,6 +36,12 @@ export default function FuelDeliverySystem() {
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [orderError, setOrderError] = useState(null);
   const [pumpId, setPumpId] = useState(0);
+  const [fuelPrices, setFuelPrices] = useState({
+    Regular: { pricePerLiter: 272.89, deliveryFee: 150 },
+    Diesel: { pricePerLiter: 278.91, deliveryFee: 150 },
+    Premium: { pricePerLiter: 210.3, deliveryFee: 150 }
+  });
+  const [loadingPrices, setLoadingPrices] = useState(true);
 
   // Dummy delivery locations in Islamabad
   const locations = [
@@ -91,7 +97,60 @@ export default function FuelDeliverySystem() {
     console.log(pumpId);
   };
 
-  // Handle order creation
+  // Fetch fuel prices from backend
+  useEffect(() => {
+    fetchFuelPrices();
+  }, []);
+
+  const fetchFuelPrices = async () => {
+    try {
+      setLoadingPrices(true);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/fuel-prices`);
+      const data = await response.json();
+      
+      if (data.success) {
+        // Convert array to object for easier access
+        const pricesObj = {};
+        data.data.forEach(price => {
+          pricesObj[price.fuelType] = {
+            pricePerLiter: price.pricePerLiter,
+            deliveryFee: price.deliveryFee
+          };
+        });
+        
+        setFuelPrices(pricesObj);
+      } else {
+        console.error('Failed to fetch fuel prices');
+      }
+    } catch (error) {
+      console.error('Error fetching fuel prices:', error);
+    } finally {
+      setLoadingPrices(false);
+    }
+  };
+
+  // Get current fuel price based on selected fuel type
+  const getCurrentFuelPrice = () => {
+    return fuelPrices[fuelType]?.pricePerLiter || 0;
+  };
+
+  // Get current delivery fee
+  const getDeliveryFee = () => {
+    return fuelPrices[fuelType]?.deliveryFee || 150;
+  };
+
+  // Calculate subtotal
+  const calculateSubtotal = () => {
+    const price = getCurrentFuelPrice();
+    return price * quantity;
+  };
+
+  // Calculate total
+  const calculateTotal = () => {
+    return calculateSubtotal() + getDeliveryFee();
+  };
+
+  // Update the createOrder function to use dynamic prices
   const createOrder = async () => {
     try {
       setIsCreatingOrder(true);
@@ -102,7 +161,11 @@ export default function FuelDeliverySystem() {
         throw new Error("Please fill in all required fields");
       }
 
-      // Prepare order data
+      // Get current prices
+      const currentPrice = getCurrentFuelPrice();
+      const deliveryFee = getDeliveryFee();
+      
+      // Prepare order data with current prices
       const orderData = {
         fuelPump: pumpId,
         fuelType,
@@ -115,6 +178,8 @@ export default function FuelDeliverySystem() {
           address: address,
         },
         paymentMethod,
+        fuelPrice: currentPrice,
+        deliveryFee: deliveryFee
       };
 
       // Make API call to create order
@@ -163,8 +228,8 @@ export default function FuelDeliverySystem() {
         },
         fuelType: data.data.fuelType,
         quantity: data.data.quantity,
-        price: data.data.totalAmount - data.data.deliveryFare,
-        deliveryFee: data.data.deliveryFare,
+        price: currentPrice, // Use the dynamic price
+        deliveryFee: deliveryFee, // Use the dynamic delivery fee
         address: data.data.deliveryAddress.address,
       };
 
@@ -400,30 +465,17 @@ export default function FuelDeliverySystem() {
           <div className="flex justify-between py-2 border-t border-gray-200">
             <span className="text-gray-600">Subtotal</span>
             <span className="font-medium">
-              Rs.{" "}
-              {(fuelType === "Regular"
-                ? 272.89 * quantity
-                : fuelType === "Diesel"
-                ? 278.91 * quantity
-                : 210.3 * quantity
-              ).toFixed(2)}
+              Rs. {calculateSubtotal().toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between py-2 border-t border-gray-200">
             <span className="text-gray-600">Delivery Fee</span>
-            <span className="font-medium">Rs. 150.00</span>
+            <span className="font-medium">Rs. {getDeliveryFee().toFixed(2)}</span>
           </div>
           <div className="flex justify-between py-2 border-t border-b border-gray-200">
             <span className="font-bold">Total</span>
             <span className="font-bold text-red-600">
-              Rs.{" "}
-              {(
-                (fuelType === "Regular"
-                  ? 272.89 * quantity
-                  : fuelType === "Diesel"
-                  ? 278.91 * quantity
-                  : 210.3 * quantity) + 150
-              ).toFixed(2)}
+              Rs. {calculateTotal().toFixed(2)}
             </span>
           </div>
         </div>
@@ -960,307 +1012,10 @@ export default function FuelDeliverySystem() {
                 </div>
 
                 {/* Step 1: Fuel Selection */}
-                {activeStep === 1 && (
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-800 mb-4">
-                      Select Fuel Type & Quantity
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      {["Regular", "Diesel", "Premium"].map((fuel) => (
-                        <div
-                          key={fuel}
-                          className={`border rounded-lg p-4 cursor-pointer transition ${
-                            fuelType === fuel
-                              ? "border-red-600 bg-red-50"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                          onClick={() => setFuelType(fuel)}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center">
-                              <Fuel
-                                size={20}
-                                className={`mr-2 ${
-                                  fuelType === fuel
-                                    ? "text-red-600"
-                                    : "text-gray-400"
-                                }`}
-                              />
-                              <span className="font-medium">{fuel}</span>
-                            </div>
-                            <div
-                              className={`w-4 h-4 rounded-full border ${
-                                fuelType === fuel
-                                  ? "border-red-600 bg-red-600"
-                                  : "border-gray-300"
-                              }`}
-                            >
-                              {fuelType === fuel && (
-                                <div className="w-2 h-2 bg-white rounded-full m-auto mt-1"></div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Current Price: Rs.{" "}
-                            {fuel === "Regular"
-                              ? "272.89"
-                              : fuel === "Diesel"
-                              ? "278.91"
-                              : "210.30"}
-                            /liter
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mb-6">
-                      <label className="block font-medium text-gray-700 mb-2">
-                        Quantity (Liters)
-                      </label>
-                      <div className="flex items-center">
-                        <button
-                          className="px-3 py-2 bg-gray-200 text-gray-700 rounded-l-lg hover:bg-gray-300 transition"
-                          onClick={() => setQuantity(Math.max(5, quantity - 5))}
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          value={quantity}
-                          onChange={(e) =>
-                            setQuantity(
-                              Math.max(
-                                5,
-                                Math.min(100, parseInt(e.target.value) || 5)
-                              )
-                            )
-                          }
-                          className="w-20 text-center border-y py-2 focus:outline-none"
-                        />
-                        <button
-                          className="px-3 py-2 bg-gray-200 text-gray-700 rounded-r-lg hover:bg-gray-300 transition"
-                          onClick={() =>
-                            setQuantity(Math.min(100, quantity + 5))
-                          }
-                        >
-                          +
-                        </button>
-                        <span className="ml-2 text-gray-600">liters</span>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-500">
-                        Min: 5 liters | Max: 100 liters
-                      </div>
-                    </div>
-
-                    <div className="mt-8">
-                      <div className="flex justify-between py-2 border-t border-gray-200">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span className="font-medium">
-                          Rs.{" "}
-                          {(fuelType === "Regular"
-                            ? 272.89 * quantity
-                            : fuelType === "Diesel"
-                            ? 278.91 * quantity
-                            : 210.3 * quantity
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-2 border-t border-gray-200">
-                        <span className="text-gray-600">Delivery Fee</span>
-                        <span className="font-medium">Rs. 150.00</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-t border-b border-gray-200">
-                        <span className="font-bold">Total</span>
-                        <span className="font-bold text-red-600">
-                          Rs.{" "}
-                          {(
-                            (fuelType === "Regular"
-                              ? 272.89 * quantity
-                              : fuelType === "Diesel"
-                              ? 278.91 * quantity
-                              : 210.3 * quantity) + 150
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end mt-6">
-                      <button
-                        onClick={() => setActiveStep(2)}
-                        className="py-3 px-6 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center"
-                      >
-                        Continue
-                        <ChevronRight size={20} className="ml-2" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {activeStep === 1 && renderFuelSelection()}
 
                 {/* Step 2: Delivery Location */}
-                {activeStep === 2 && (
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-800 mb-4">
-                      Delivery Location
-                    </h3>
-
-                    <div className="mb-6">
-                      <label className="block font-medium text-gray-700 mb-2">
-                        Search Location
-                      </label>
-                      <div className="relative">
-                        {isGoogleMapsLoaded ? (
-                          <Autocomplete
-                            onLoad={setSearchBox}
-                            onPlaceChanged={onPlaceSelected}
-                          >
-                            <input
-                              type="text"
-                              placeholder="Enter your delivery location"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                            />
-                          </Autocomplete>
-                        ) : (
-                          <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100">
-                            Loading location search...
-                          </div>
-                        )}
-                      </div>
-                      {searchError && (
-                        <p className="mt-2 text-sm text-red-600">
-                          {searchError}
-                        </p>
-                      )}
-                    </div>
-
-                    {selectedLocation && (
-                      <div className="mb-6">
-                        <h4 className="font-medium text-gray-800 mb-2">
-                          Nearby Fuel Pumps
-                        </h4>
-                        {isLoadingPumps ? (
-                          <div className="text-center py-4">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-                            <p className="mt-2 text-gray-600">
-                              Finding nearby fuel pumps...
-                            </p>
-                          </div>
-                        ) : nearbyPumps.length > 0 ? (
-                          <div className="grid grid-cols-1 gap-4">
-                            {nearbyPumps.map((pump) => (
-                              <div
-                                key={pump._id}
-                                className={`border rounded-lg p-4 cursor-pointer transition ${
-                                  pump._id === pumpId
-                                    ? "border-red-600 bg-red-50"
-                                    : "border-gray-200 hover:border-gray-300"
-                                }`}
-                                onClick={() => pumpSelected(pump._id, pump.location.address)}
-                              >
-                                <div className="flex items-center justify-between mb-1">
-                                  <div className="flex items-center">
-                                    <MapPin
-                                      size={18}
-                                      className={`mr-2 ${
-                                        address === pump.address
-                                          ? "text-red-600"
-                                          : "text-gray-400"
-                                      }`}
-                                    />
-                                    <span className="font-medium">
-                                      {pump.name || "Fuel Station"}
-                                    </span>
-                                  </div>
-                                  <div
-                                    className={`w-4 h-4 rounded-full border ${
-                                      address === pump.address
-                                        ? "border-red-600 bg-red-600"
-                                        : "border-gray-300"
-                                    }`}
-                                  >
-                                    {pumpId === pump._id && (
-                                      <div className="w-2 h-2 bg-white rounded-full m-auto mt-1"></div>
-                                    )}
-                                  </div>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {pump.location.address}
-                                </p>
-                                
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-4 bg-gray-50 rounded-lg">
-                            <p className="text-gray-600">
-                              No fuel pumps found within 5km radius
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-                      <h4 className="font-medium text-gray-800 mb-2">
-                        Delivery Notes
-                      </h4>
-                      <textarea
-                        placeholder="Any special instructions for delivery driver?"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                        rows="3"
-                      ></textarea>
-                    </div>
-
-                    <div className="mt-8">
-                      <div className="flex justify-between py-2 border-t border-gray-200">
-                        <span className="text-gray-600">Subtotal</span>
-                        <span className="font-medium">
-                          Rs.{" "}
-                          {(fuelType === "Regular"
-                            ? 272.89 * quantity
-                            : fuelType === "Diesel"
-                            ? 278.91 * quantity
-                            : 210.3 * quantity
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between py-2 border-t border-gray-200">
-                        <span className="text-gray-600">Delivery Fee</span>
-                        <span className="font-medium">Rs. 150.00</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-t border-b border-gray-200">
-                        <span className="font-bold">Total</span>
-                        <span className="font-bold text-red-600">
-                          Rs.{" "}
-                          {(
-                            (fuelType === "Regular"
-                              ? 272.89 * quantity
-                              : fuelType === "Diesel"
-                              ? 278.91 * quantity
-                              : 210.3 * quantity) + 150
-                          ).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between mt-6">
-                      <button
-                        onClick={() => setActiveStep(1)}
-                        className="py-3 px-6 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition flex items-center"
-                      >
-                        <ChevronLeft size={20} className="mr-2" />
-                        Back
-                      </button>
-                      <button
-                        onClick={() => setActiveStep(3)}
-                        className="py-3 px-6 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition flex items-center"
-                      >
-                        Continue
-                        <ChevronRight size={20} className="ml-2" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {activeStep === 2 && renderDeliveryLocation()}
 
                 {/* Step 3: Payment */}
                 {activeStep === 3 && renderPaymentStep()}

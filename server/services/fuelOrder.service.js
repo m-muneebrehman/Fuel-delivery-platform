@@ -12,14 +12,21 @@ class FuelOrderService {
                 throw new Error('Fuel pump not found');
             }
 
-            // Calculate delivery fare
-            const fare = await MapsService.calculateDeliveryFare(
-                fuelPumpData.location.coordinates,
-                orderData.deliveryAddress.coordinates
-            );
+            // Calculate delivery fare - either use the provided fare or calculate it
+            let fare = orderData.deliveryFee;
+            if (!fare) {
+                fare = await MapsService.calculateDeliveryFare(
+                    fuelPumpData.location.coordinates,
+                    orderData.deliveryAddress.coordinates
+                );
+            }
 
-            // Calculate total amount
-            const fuelPrice = await this.getFuelPrice(orderData.fuelType);
+            // Calculate total amount - either use the provided fuel price or get it from the service
+            let fuelPrice = orderData.fuelPrice;
+            if (!fuelPrice) {
+                fuelPrice = await this.getFuelPrice(orderData.fuelType);
+            }
+            
             const totalAmount = (fuelPrice * orderData.quantity) + fare;
 
             // Create and save order
