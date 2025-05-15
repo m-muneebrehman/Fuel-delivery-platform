@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
 import Swal from "sweetalert2";
@@ -13,6 +13,15 @@ const PetrolOwnerLoginPage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      navigate("/petrol-owner/dashboard");
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -33,24 +42,25 @@ const PetrolOwnerLoginPage = () => {
         password: formData.password
       });
 
-      const data = response.data;
-      console.log(data);
-      if (data.verified === false) {
-        Swal.fire({
-          icon: "info",
-          title: "Pending Verification",
-          text: "Your account has been created but is yet to be verified. Please wait for approval.",
-          confirmButtonColor: "#28a745",
-        });
-      } else {
-        console.log(data.ownerId);
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("ownerId", data.ownerId);
-        localStorage.setItem("userType", "fuelPump");
+      const { success, message, data } = response.data;
+      console.log("Login response:", response.data);
+
+      if (success && data) {
+        // Store token and user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('ownerId', data._id);
+        localStorage.setItem('userType', 'fuelPump');
+        localStorage.setItem('stationName', data.name);
+        
+        // Set authorization header
         axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+        
         navigate("/petrol-owner/dashboard");
+      } else {
+        setError(message || "Login failed. Please try again.");
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.response?.data?.message || "Invalid email or password. Please try again.");
     } finally {
       setIsLoading(false);
