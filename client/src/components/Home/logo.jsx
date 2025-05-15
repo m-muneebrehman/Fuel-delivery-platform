@@ -25,7 +25,7 @@ export const Logo = () => {
             fill="#a16ee8"
           />
         </svg>
-        <span className="text-3xl font-semibold text-white drop-shadow-sm">Gear & Go</span>
+        <span className="text-3xl font-semibold text-white drop-shadow-sm">GEAR & GO</span>
       </div>
     );
   }
