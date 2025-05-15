@@ -18,7 +18,7 @@ const Step1Form = ({ formData, handleChange, nextStep }) => {
           value={formData.name}
           onChange={handleChange}
           placeholder="Fuel Pump Name"
-          className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
           required
           minLength={3}
         />
@@ -28,7 +28,7 @@ const Step1Form = ({ formData, handleChange, nextStep }) => {
           value={formData.email}
           onChange={handleChange}
           placeholder="Email Address"
-          className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
           required
         />
         <input
@@ -37,7 +37,7 @@ const Step1Form = ({ formData, handleChange, nextStep }) => {
           value={formData.password}
           onChange={handleChange}
           placeholder="Password"
-          className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
           required
           minLength={8}
         />
@@ -47,7 +47,7 @@ const Step1Form = ({ formData, handleChange, nextStep }) => {
           value={formData.confirmPassword}
           onChange={handleChange}
           placeholder="Confirm Password"
-          className="text-gray-900 w-full px-4 py-3 border border-gray-300 rounded-md"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
           required
         />
         
