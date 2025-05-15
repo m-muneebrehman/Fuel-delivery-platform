@@ -9,7 +9,6 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const navigationItems = [
     { title: "Orders", href: "/petrol-owner/dashboard" },
-    { title: "Products", href: "/petrol-owner/dashboard" },
     { title: "Settings", href: "/petrol-owner/settings" },
   ];
 

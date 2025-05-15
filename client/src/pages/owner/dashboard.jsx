@@ -1,6 +1,5 @@
 import { ShoppingBag, Package, Filter, Clock } from 'lucide-react';
 import { Navbar } from '@/components/poDash/Navbar';
-import Products from '@/components/poDash/Products';
 import Orders from '@/components/poDash/Orders'
 
 export default function OrdersProductsPage() {
@@ -14,8 +13,6 @@ export default function OrdersProductsPage() {
         <div className="bg-white/90 dark:bg-gray-900/80 rounded-3xl shadow-2xl p-8 border border-gray-200 dark:border-gray-800 backdrop-blur-md">
           {/* Orders Section */}
           <Orders />
-          {/* Products Section */}
-          <Products />
         </div>
       </main>
     </div>

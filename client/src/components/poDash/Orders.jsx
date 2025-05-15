@@ -338,7 +338,7 @@ function Orders() {
                       {order.quantity} L
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-base font-semibold text-blue-900 dark:text-blue-100">
-                      ${order.totalAmount.toFixed(2)}
+                      Rs.{order.totalAmount.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.orderStatus} />
