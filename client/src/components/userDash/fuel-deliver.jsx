@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Autocomplete, LoadScript } from "@react-google-maps/api";
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function FuelDeliverySystem() {
   const [activeStep, setActiveStep] = useState(1);
@@ -51,6 +52,10 @@ export default function FuelDeliverySystem() {
   const [deliveryFee, setDeliveryFee] = useState(150); // Default value
   const [isCalculatingFare, setIsCalculatingFare] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+  const [orderStatus, setOrderStatus] = useState(null);
+  const [statusCheckInterval, setStatusCheckInterval] = useState(null);
+  const navigate = useNavigate();
 
   // Dummy delivery locations in Islamabad
   const locations = [
@@ -237,7 +242,94 @@ export default function FuelDeliverySystem() {
     return calculateSubtotal() + getDeliveryFee();
   };
 
-  // Update the createOrder function to use dynamic prices
+  // Add polling interval for order tracking
+  useEffect(() => {
+    let pollInterval;
+    
+    if (currentOrder && currentOrder.status !== 'delivered') {
+      pollInterval = setInterval(async () => {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/fuel-orders/${currentOrder.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            }
+          );
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch order status');
+          }
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            setCurrentOrder(prevOrder => ({
+              ...prevOrder,
+              status: data.data.orderStatus,
+              tracking: {
+                ...prevOrder.tracking,
+                progress: data.data.progress || prevOrder.tracking.progress,
+              },
+              driver: data.data.deliveryBoy ? {
+                name: data.data.deliveryBoy.name,
+                phone: data.data.deliveryBoy.phone,
+                rating: data.data.deliveryBoy.rating || 4.5,
+                vehicle: data.data.deliveryBoy.vehicle || "Toyota Hilux",
+              } : prevOrder.driver,
+            }));
+            
+            // If order is delivered, clear the interval
+            if (data.data.orderStatus === 'delivered') {
+              clearInterval(pollInterval);
+            }
+          }
+        } catch (error) {
+          console.error('Error polling order status:', error);
+        }
+      }, 5000); // Poll every 5 seconds
+    }
+    
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [currentOrder]);
+
+  // Add this function to check order status
+  const checkOrderStatus = async (orderId) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/fuel-orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch order status');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setOrderStatus(data.data.orderStatus);
+        
+        // If order is delivered or cancelled, clear the interval
+        if (data.data.orderStatus === 'delivered' || data.data.orderStatus === 'cancelled') {
+          clearInterval(statusCheckInterval);
+          setStatusCheckInterval(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking order status:', error);
+    }
+  };
+
+  // Modify the createOrder function
   const createOrder = async () => {
     try {
       setIsCreatingOrder(true);
@@ -288,92 +380,235 @@ export default function FuelDeliverySystem() {
         throw new Error(data.message || "Failed to create order");
       }
 
-      // Create new order object with response data
+      // Show success message
+      toast.success(`Your fuel order #${data.data._id} has been placed successfully!`);
+
+      // Set current order and show tracking
       const newOrder = {
         id: data.data._id,
-        status: data.data.orderStatus,
+        status: data.data.orderStatus || 'pending',
         createdAt: data.data.createdAt,
         estimatedDelivery: new Date(Date.now() + 45 * 60000).toISOString(),
-        driver: data.data.deliveryBoy
-          ? {
-              name: data.data.deliveryBoy.name,
-              phone: data.data.deliveryBoy.phone,
-              rating: data.data.deliveryBoy.rating || 4.5,
-              vehicle: data.data.deliveryBoy.vehicle || "Toyota Hilux",
-            }
-          : null,
         tracking: {
-          currentLocation: {
-            lat: selectedLocation.latitude,
-            lng: selectedLocation.longitude,
-          },
-          destination: {
-            lat: selectedLocation.latitude,
-            lng: selectedLocation.longitude,
-          },
           progress: 0,
         },
         fuelType: data.data.fuelType,
         quantity: data.data.quantity,
-        price: currentPrice, // Use the dynamic price
-        deliveryFee: deliveryFee, // Use the dynamic delivery fee
+        price: data.data.fuelPrice,
+        deliveryFee: data.data.deliveryFee,
         address: data.data.deliveryAddress.address,
       };
 
-      // Add to orders list
-      setOrders([newOrder, ...orders]);
       setCurrentOrder(newOrder);
-
-      // Start tracking
-      setShowTracking(true);
-
-      // Show success message
-      alert(`Your fuel order #${newOrder.id} has been placed successfully!`);
+      setIsOrderPlaced(true);
+      setIsCreatingOrder(false);
     } catch (error) {
       console.error("Error creating order:", error);
       setOrderError(error.message);
-    } finally {
+      toast.error(error.message);
       setIsCreatingOrder(false);
     }
   };
 
-  // Update tracking progress
+  // Add cleanup for interval
   useEffect(() => {
-    if (!currentOrder) return;
+    return () => {
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+      }
+    };
+  }, [statusCheckInterval]);
 
-    const interval = setInterval(() => {
-      setCurrentOrder((prev) => {
-        if (!prev) return null;
+  // Add loading screen component
+  const OrderLoadingScreen = () => (
+    <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Processing Your Order</h2>
+        <p className="text-gray-600 mb-4">Please wait while we confirm your order...</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-2 h-2 bg-red-600 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-red-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-red-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
-        // Update progress
-        const newProgress = Math.min(100, (prev.tracking?.progress || 0) + 1);
+  // Modify the OrderStatusScreen component
+  const OrderStatusScreen = () => {
+    const [status, setStatus] = useState(currentOrder?.status || 'pending');
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-        // Update status based on progress
-        let status = prev.status;
-        if (newProgress >= 100) {
-          status = "delivered";
-          clearInterval(interval);
-        } else if (newProgress >= 80) {
-          status = "arriving";
-        } else if (newProgress >= 20) {
-          status = "in-transit";
-        } else {
-          status = "preparing";
+    useEffect(() => {
+      if (!currentOrder?.id) {
+        setError('No order found');
+        setIsLoading(false);
+        return;
+      }
+
+      const checkStatus = async () => {
+        try {
+          setIsLoading(true);
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL}/fuel-orders/${currentOrder.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch status');
+          }
+
+          const data = await response.json();
+          if (data.success) {
+            setStatus(data.data.orderStatus);
+            setError(null);
+          }
+        } catch (error) {
+          console.error('Error checking status:', error);
+          setError('Failed to fetch order status');
+        } finally {
+          setIsLoading(false);
         }
+      };
 
-        return {
-          ...prev,
-          status,
-          tracking: {
-            ...prev.tracking,
-            progress: newProgress,
-          },
-        };
-      });
-    }, 1000); // Update every second for demo purposes
+      // Check status immediately
+      checkStatus();
 
-    return () => clearInterval(interval);
-  }, [currentOrder]);
+      // Set up interval to check every 10 seconds
+      const interval = setInterval(checkStatus, 10000);
+
+      // Cleanup interval on unmount
+      return () => clearInterval(interval);
+    }, [currentOrder?.id]);
+
+    const getStatusColor = (status) => {
+      switch (status?.toLowerCase()) {
+        case 'pending':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'in-transit':
+          return 'bg-blue-100 text-blue-800';
+        case 'delivered':
+          return 'bg-green-100 text-green-800';
+        case 'cancelled':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    };
+
+    const getStatusMessage = (status) => {
+      switch (status?.toLowerCase()) {
+        case 'pending':
+          return 'Your order is being processed...';
+        case 'assigned':
+          return 'A delivery partner has been assigned...';
+        case 'in-transit':
+          return 'Your fuel is on the way...';
+        case 'delivered':
+          return 'Your order has been delivered!';
+        case 'cancelled':
+          return 'Your order has been cancelled.';
+        default:
+          return 'Processing your order...';
+      }
+    };
+
+    if (isLoading) {
+      return (
+        <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading Order Status</h2>
+              <p className="text-gray-600">Please wait while we fetch your order details...</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
+              <p className="text-gray-600">{error}</p>
+            </div>
+            <button
+              onClick={() => {
+                setIsOrderPlaced(false);
+                setShowTracking(false);
+              }}
+              className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            >
+              Back to Order
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="fixed inset-0 bg-white bg-opacity-90 z-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Truck className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Order Status</h2>
+            <p className="text-gray-600">
+              {getStatusMessage(status)}
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Order ID</span>
+              <span className="font-medium">{currentOrder.id}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Status</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status)}`}>
+                {status}
+              </span>
+            </div>
+          </div>
+
+          {status === 'delivered' || status === 'cancelled' ? (
+            <button
+              onClick={() => {
+                setIsOrderPlaced(false);
+                setShowTracking(true);
+              }}
+              className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            >
+              View Order Details
+            </button>
+          ) : (
+            <div className="mt-6">
+              <div className="animate-pulse text-sm text-gray-500">
+                Checking status...
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Generate order status description
   const getStatusDescription = (status) => {
@@ -431,31 +666,43 @@ export default function FuelDeliverySystem() {
         setDeliveryCoordinates(location);
         setAddress(place.formatted_address);
 
-        // Fetch nearby fuel pumps
+        // Get the token from localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Authentication token not found. Please login again.');
+        }
+
+        // Fetch nearby fuel pumps with authorization header
         const response = await fetch(
           `${import.meta.env.VITE_API_URL}/fuel-orders/nearby-pumps?location=${JSON.stringify(
             location
           )}&radius=10000`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
             },
           }
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch");
+          if (response.status === 401) {
+            throw new Error('Session expired. Please login again.');
+          }
+          throw new Error('Failed to fetch nearby pumps');
         }
+
         const data = await response.json();
 
         if (!data.success) {
-          throw new Error(data.message || "Failed to fetch nearby fuel pumps");
+          throw new Error(data.message || 'Failed to fetch nearby fuel pumps');
         }
         setNearbyPumps(data.data);
       } catch (error) {
         console.error("Error:", error);
         setSearchError(error.message);
         setNearbyPumps([]);
+        toast.error(error.message);
       } finally {
         setIsLoadingPumps(false);
       }
@@ -1006,13 +1253,20 @@ export default function FuelDeliverySystem() {
     setIsGoogleMapsLoaded(true);
   };
 
+  // Fix the LoadScript libraries warning
+  const libraries = ["places"];
+
   return (
     <div className="min-h-screen bg-gray-100">
       <LoadScript
         googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-        libraries={["places"]}
+        libraries={libraries}
         onLoad={handleGoogleMapsLoad}
       >
+        {/* Add loading and status screens */}
+        {isCreatingOrder && <OrderLoadingScreen />}
+        {isOrderPlaced && !isCreatingOrder && currentOrder && <OrderStatusScreen />}
+        
         {/* Header */}
         <header className="bg-red-600 text-white shadow-lg">
           <div className="container mx-auto px-4 py-3 flex justify-between items-center">

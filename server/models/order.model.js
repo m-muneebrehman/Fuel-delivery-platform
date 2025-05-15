@@ -62,6 +62,23 @@ const orderSchema = new mongoose.Schema({
         start: String,
         end: String
     },
+    deliveryBoy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DeliveryBoy'
+    },
+    deliveryBoyLocation: {
+        coordinates: {
+            lat: Number,
+            lng: Number
+        },
+        lastUpdated: {
+            type: Date,
+            default: Date.now
+        },
+        heading: Number, // Direction in degrees
+        speed: Number,   // Speed in km/h
+        accuracy: Number // Location accuracy in meters
+    },
     notes: String,
     createdAt: {
         type: Date,

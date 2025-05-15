@@ -40,6 +40,9 @@ router.get('/unverified', deliveryBoyController.getUnverifiedDeliveryBoys);
 router.post('/:id/verify', deliveryBoyController.verifyDeliveryBoy);
 router.post('/:id/reject', deliveryBoyController.rejectDeliveryBoy);
 
+// Add new route for getting assigned orders
+router.get('/assigned-orders', authMiddleware.authDeliveryBoy, deliveryBoyController.getAssignedOrders);
+
 module.exports = router;
 
 

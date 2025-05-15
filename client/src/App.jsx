@@ -18,7 +18,7 @@ import PoSignUp from "./pages/auth/petrol-owner/poSignUp";
 import Store from "./pages/admin/Store";
 import LoginDeliveryBoy from "./pages/deliveryBoy/dLogin";
 import DeliveryBoyDashboard from "./pages/deliveryBoy/dDashboard";
-import FuelPrices from "./pages/admin/FuelPrices"
+import FuelPrices from "./pages/admin/FuelPrices";
 
 const PrivateRoute = ({ children }) => {
   const { userInfo } = useAppStore();
@@ -53,7 +53,7 @@ const App = () => {
           <Route path="/user/fuel" element={<FuelDeliverySystem />}></Route>
           <Route path="/user/profile" element={<UserProfile />}></Route>
           <Route path="/admin" element={<AdminHome />}></Route>
-          <Route path="/admin/store" element={<Store />}></ Route>
+          <Route path="/admin/store" element={<Store />}></Route>
           <Route path="/admin/fuel-prices" element={<FuelPrices />}></Route>
           <Route path="/admin/notifications" element={<Notifications />}></Route>
           <Route path="/deliveryBoy" element={<LoginDeliveryBoy />}></Route>

@@ -218,6 +218,62 @@ class FuelOrderController {
             });
         }
     }
+
+    static async getDeliveryBoyOrders(req, res) {
+        try {
+            const deliveryBoyId = req.user._id; // Get delivery boy ID from auth middleware
+            const orders = await FuelOrderService.getDeliveryBoyOrders(deliveryBoyId);
+            
+            res.status(200).json({
+                success: true,
+                data: orders
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    static async updateDeliveryLocation(req, res) {
+        try {
+            const { orderId } = req.params;
+            const locationData = req.body;
+            
+            const order = await FuelOrderService.updateDeliveryLocation(orderId, locationData);
+            
+            res.status(200).json({
+                success: true,
+                message: 'Delivery location updated successfully',
+                data: order
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
+    static async markOrderAsDelivered(req, res) {
+        try {
+            const { orderId } = req.params;
+            
+            const order = await FuelOrderService.markOrderAsDelivered(orderId);
+            
+            res.status(200).json({
+                success: true,
+                message: 'Order marked as delivered successfully',
+                data: order
+            });
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
 }
 
 module.exports = FuelOrderController; 

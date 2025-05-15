@@ -189,6 +189,76 @@ class FuelOrderService {
             throw new Error(`Failed to get fuel pump orders: ${error.message}`);
         }
     }
+
+    static async getDeliveryBoyOrders(deliveryBoyId) {
+        try {
+            const orders = await FuelOrder.find({ 
+                deliveryBoy: deliveryBoyId,
+                orderStatus: { $in: ['in-transit', 'pending', 'assigned'] }
+            })
+            .populate('user', 'userName')
+            .populate('fuelPump', 'name location')
+            .sort({ createdAt: -1 });
+
+            return orders;
+        } catch (error) {
+            console.error('Error in getDeliveryBoyOrders:', error);
+            throw new Error(`Failed to get delivery boy orders: ${error.message}`);
+        }
+    }
+
+    static async updateDeliveryLocation(orderId, locationData) {
+        try {
+            const order = await FuelOrder.findById(orderId);
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            // Update the delivery boy location
+            order.deliveryBoyLocation = {
+                coordinates: locationData.coordinates,
+                lastUpdated: new Date(),
+                heading: locationData.heading,
+                speed: locationData.speed,
+                accuracy: locationData.accuracy
+            };
+
+            await order.save();
+            return order;
+        } catch (error) {
+            console.error('Error in updateDeliveryLocation:', error);
+            throw new Error(`Failed to update delivery location: ${error.message}`);
+        }
+    }
+
+    static async markOrderAsDelivered(orderId) {
+        try {
+            const order = await FuelOrder.findById(orderId)
+                .populate('deliveryBoy');
+            
+            if (!order) {
+                throw new Error('Order not found');
+            }
+
+            // Update order status
+            order.orderStatus = 'delivered';
+            await order.save();
+
+            // Update delivery boy status to available
+            if (order.deliveryBoy) {
+                const deliveryBoy = await DeliveryBoy.findById(order.deliveryBoy._id);
+                if (deliveryBoy) {
+                    deliveryBoy.status = 'available';
+                    await deliveryBoy.save();
+                }
+            }
+
+            return order;
+        } catch (error) {
+            console.error('Error in markOrderAsDelivered:', error);
+            throw new Error(`Failed to mark order as delivered: ${error.message}`);
+        }
+    }
 }
 
 module.exports = FuelOrderService; 

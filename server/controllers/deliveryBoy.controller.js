@@ -5,6 +5,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const blacklistTokenModel = require("../models/blacklistToken.model");
+const FuelOrder = require("../models/fuelOrder.model");
 
 // Create 'uploads' directory if it doesn't exist
 const uploadDir = path.join(__dirname, "..", "uploads");
@@ -279,4 +280,30 @@ module.exports.getTotalDeliveryBoys = async (req, res) => {
             message: 'Internal server error'
         });
     }
+};
+
+// Get assigned orders for a delivery boy
+module.exports.getAssignedOrders = async (req, res) => {
+  try {
+    const deliveryBoyId = req.user._id; // Get from auth middleware
+
+    const orders = await FuelOrder.find({ 
+      deliveryBoy: deliveryBoyId,
+      orderStatus: { $in: ['in-transit', 'pending'] }
+    })
+    .populate('user', 'name phoneNumber')
+    .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Assigned orders retrieved successfully",
+      data: orders
+    });
+  } catch (error) {
+    console.error("Error getting assigned orders:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 };
